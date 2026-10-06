@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Faculty | Fu Jen imMBA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/styles.css?v=i18n1">
+</head>
+<body data-page="faculty.html">
+  <main id="main">
+    <section class="page-hero">
+      <div class="wrap">
+        <p class="crumbs" data-i18n="fac.crumbs">Home / Faculty</p>
+        <div class="eyebrow" data-i18n="fac.eyebrow">Full-time and professional faculty</div>
+        <h1 data-i18n="fac.h1">Teachers who work across markets and methods.</h1>
+        <p class="muted" data-i18n="fac.lead">Search by name or specialty using the box below.</p>
+        <div class="search-box" style="max-width:420px;margin-top:18px">
+          <input id="q" type="search" data-i18n-placeholder="fac.search" placeholder="Search faculty..." oninput="runSearch(this.value)">
+        </div>
+        <div id="search-results" class="search-results"></div>
+      </div>
+    </section>
+    <section class="section">
+      <div class="wrap faculty-grid" id="faculty-grid"></div>
+    </section>
+  </main>
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/i18n.js"></script>
+  <script src="assets/js/site.js"></script>
+</body>
+</html>
