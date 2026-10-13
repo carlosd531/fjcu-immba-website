@@ -5,7 +5,7 @@ function navItems() {
       href: "about.html",
       children: [
         { label: t("nav.overview"), href: "about.html" },
-        { label: t("nav.regulations"), href: "regulations.html" },
+        ...(isZh() ? [{ label: t("nav.regulations"), href: "regulations.html" }] : []),
         { label: t("nav.learning"), href: "learning-environment.html" }
       ]
     },
@@ -14,7 +14,7 @@ function navItems() {
       href: "admissions.html",
       children: [
         { label: t("nav.apply"), href: "admissions.html" },
-        { label: t("nav.scholarships"), href: "scholarships.html" }
+        ...(isZh() ? [{ label: t("nav.scholarships"), href: "scholarships.html" }] : [])
       ]
     },
     {
@@ -36,6 +36,85 @@ function navItems() {
   ];
 }
 
+const NEWS_STORE_KEY = "immbaAdminNews";
+
+function cloneNews(items) {
+  return JSON.parse(JSON.stringify(items || []));
+}
+
+function normalizeNewsItem(n, index) {
+  return {
+    slug: n.slug,
+    date: n.date || "",
+    url: n.url || n.urlZh || "",
+    order: n.order === 0 || n.order ? Number(n.order) : index + 1,
+    status: n.status === "draft" ? "draft" : "published",
+    top: !!n.top,
+    tag: n.tag || "",
+    tagZh: n.tagZh || "",
+    title: n.title || "",
+    titleZh: n.titleZh || "",
+    body: n.body || "",
+    bodyZh: n.bodyZh || ""
+  };
+}
+
+function sortNews(items) {
+  return cloneNews(items).sort((a, b) => {
+    const orderA = Number(a.order) || 9999;
+    const orderB = Number(b.order) || 9999;
+    if (orderA !== orderB) return orderA - orderB;
+    if (!!a.top !== !!b.top) return a.top ? -1 : 1;
+    return String(b.date || "").localeCompare(String(a.date || ""));
+  });
+}
+
+function getStoredNews() {
+  try {
+    const raw = localStorage.getItem(NEWS_STORE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+function getActiveNews() {
+  const raw = getStoredNews() || NEWS;
+  return sortNews(raw.map((item, index) => normalizeNewsItem(item, index)));
+}
+
+function getPublishedNews() {
+  return getActiveNews().filter((item) => item.status === "published");
+}
+
+function saveActiveNews(items) {
+  const next = sortNews(items);
+  localStorage.setItem(NEWS_STORE_KEY, JSON.stringify(next));
+  return next;
+}
+
+function restoreDefaultNews() {
+  localStorage.removeItem(NEWS_STORE_KEY);
+  return sortNews(NEWS);
+}
+
+function newsSlug(title, existing) {
+  const base = String(title || "announcement")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "") || "announcement";
+  let slug = base;
+  let n = 2;
+  const used = new Set((existing || []).map((item) => item.slug));
+  while (used.has(slug)) {
+    slug = `${base}-${n}`;
+    n += 1;
+  }
+  return slug;
+}
+
 const PAGE_HEROES = {
   "about.html": { img: 0, title: "about.h1", crumbs: "about.crumbs", eyebrow: "about.eyebrow" },
   "regulations.html": { img: 2, title: "reg.h1", crumbs: "reg.crumbs", eyebrow: "nav.regulations" },
@@ -50,6 +129,7 @@ const PAGE_HEROES = {
   "exchange.html": { img: 10, title: "exc.h1", crumbs: "exc.crumbs", eyebrow: "nav.exchange" },
   "highlights.html": { img: 11, title: "hig.h1", crumbs: "hig.crumbs", eyebrow: "nav.highlights" },
   "news.html": { img: 0, title: "news.h1", crumbs: "news.crumbs", eyebrow: "news.eyebrow" },
+  "admin-news.html": { img: 0, title: "admin.h1", crumbs: "admin.crumbs", eyebrow: "admin.eyebrow" },
   "gallery.html": { img: 1, title: "gal.h1", crumbs: "gal.crumbs", eyebrow: "nav.gallery" },
   "contact.html": { img: 2, title: "con.h1", crumbs: "con.crumbs", eyebrow: "con.eyebrow" },
   "resources.html": { img: 3, title: "res.h1", crumbs: "res.crumbs", eyebrow: "footer.downloads" }
@@ -69,8 +149,19 @@ function headerHTML(active) {
     <div class="site-chrome">
       <div class="notice-bar">
         <div class="wrap notice-bar-inner">
-          <p>${t("chrome.notice")}</p>
-          <a class="official-link" href="${officialUrl()}" target="_blank" rel="noreferrer">${t("chrome.official")}</a>
+          <div class="notice-copy">
+            <p>${t("chrome.notice")}</p>
+            <a class="official-link" href="${officialUrl()}" target="_blank" rel="noreferrer">${t("chrome.official")}</a>
+          </div>
+          <div class="action-area">
+            <button class="status-toggle lang-toggle" type="button" data-next-lang="${getLang() === "zh" ? "en" : "zh"}" aria-label="${t("chrome.langSwitch", { lang: getLang() === "zh" ? t("chrome.langEn") : t("chrome.langZh") })}">
+              <span class="status-toggle-label">${getLang() === "zh" ? t("chrome.langEn") : t("chrome.langZh")}</span>
+            </button>
+            <button class="status-toggle menu-toggle" type="button" aria-expanded="${!collapsed}" aria-controls="nav" aria-label="${collapsed ? t("chrome.menuOpen") : t("chrome.menuClose")}">
+              <span class="menu-toggle-icon" aria-hidden="true"></span>
+              <span class="status-toggle-label menu-action">${collapsed ? t("chrome.menuOpen") : t("chrome.menuClose")}</span>
+            </button>
+          </div>
         </div>
       </div>
       <header class="site-header">
@@ -83,15 +174,6 @@ function headerHTML(active) {
                 <em>${t("chrome.brandSub")}</em>
               </span>
             </a>
-            <div class="action-area">
-              <button class="status-toggle lang-toggle" type="button" data-next-lang="${getLang() === "zh" ? "en" : "zh"}" aria-label="${t("chrome.langSwitch", { lang: getLang() === "zh" ? t("chrome.langEn") : t("chrome.langZh") })}">
-                <span class="status-toggle-label">${getLang() === "zh" ? t("chrome.langEn") : t("chrome.langZh")}</span>
-              </button>
-              <button class="status-toggle menu-toggle" type="button" aria-expanded="${!collapsed}" aria-controls="nav" aria-label="${collapsed ? t("chrome.menuOpen") : t("chrome.menuClose")}">
-                <span class="menu-toggle-icon" aria-hidden="true"></span>
-                <span class="status-toggle-label menu-action">${collapsed ? t("chrome.menuOpen") : t("chrome.menuClose")}</span>
-              </button>
-            </div>
           </div>
         </div>
         <nav class="navbar" aria-label="${t("nav.about")}">
@@ -163,6 +245,7 @@ function footerHTML() {
           <h3>${t("footer.contact")}</h3>
           <p>${isZh() ? "張小姐" : "Ms. Chang"}<br>+886-2-2905-2750<br><a href="mailto:imMBA@mail.fju.edu.tw">imMBA@mail.fju.edu.tw</a></p>
           <p><a href="resources.html?lang=${getLang()}">${t("footer.downloads")}</a></p>
+          <p><a href="admin-news.html?lang=${getLang()}">${t("admin.nav")}</a></p>
         </div>
       </div>
       <div class="wrap copy">
@@ -210,13 +293,15 @@ function formatDate(iso) {
 }
 
 function locNews(n) {
-  if (!isZh()) return n;
+  const zh = isZh();
+  const hasContent = !!(n.body || n.bodyZh);
   return {
     ...n,
-    title: n.titleZh || n.title,
-    excerpt: n.excerptZh || n.excerpt,
-    body: n.bodyZh || n.body,
-    tag: n.tagZh || n.tag
+    title: zh ? (n.titleZh || n.title) : (n.title || n.titleZh),
+    body: zh ? (n.bodyZh || n.body) : (n.body || n.bodyZh),
+    tag: zh ? (n.tagZh || n.tag) : (n.tag || n.tagZh),
+    href: hasContent ? withLang("news.html?slug=" + n.slug) : (n.url || withLang("news.html?slug=" + n.slug)),
+    external: !hasContent
   };
 }
 
@@ -242,16 +327,44 @@ function locFaculty(f) {
   return { ...f, role };
 }
 
+function newsLangSwitcherHTML() {
+  const lang = getLang();
+  return `<div class="news-lang-switch">
+    <span>${t("news.chooseLang")}</span>
+    <button type="button" class="btn ${lang === "en" ? "btn-navy" : "btn-outline"}" data-set-lang="en">English</button>
+    <button type="button" class="btn ${lang === "zh" ? "btn-navy" : "btn-outline"}" data-set-lang="zh">中文</button>
+  </div>`;
+}
+
+function mountNewsLangSwitch(target) {
+  if (!target || target.previousElementSibling?.classList.contains("news-lang-switch")) return;
+  target.insertAdjacentHTML("beforebegin", newsLangSwitcherHTML());
+}
+
+function bindNewsLangSwitch() {
+  document.querySelectorAll("[data-set-lang]").forEach((btn) => {
+    btn.addEventListener("click", () => setLang(btn.dataset.setLang));
+  });
+}
+
 function renderNewsList(target, items, limit) {
-  const list = (items || NEWS).map(locNews).slice(0, limit || 99);
-  target.innerHTML = list.map((n) => `
-    <a class="news-item" href="${withLang("news.html?slug=" + n.slug)}">
-      <div class="date">${formatDate(n.date)}</div>
+  const list = (items || getPublishedNews()).map(locNews).slice(0, limit || 99);
+  target.classList.remove("announce-grid");
+  target.classList.add("news-list");
+  mountNewsLangSwitch(target);
+  target.innerHTML = list.map((n) => {
+    const preview = String(n.body || "").replace(/\s+/g, " ").trim();
+    const excerpt = preview.length > 160 ? `${preview.slice(0, 157)}…` : preview;
+    return `
+    <a class="news-item ${n.external ? "link-out" : "link-in"}" href="${n.href}" ${n.external ? 'target="_blank" rel="noreferrer"' : ""}>
+      <time class="date" datetime="${n.date}">${formatDate(n.date)}</time>
       <div>
-        <strong>${n.title}</strong>
-        <p class="muted" style="margin:6px 0 0">${n.excerpt}</p>
+        <strong>${escapeHtml(n.title)}</strong>
+        ${excerpt ? `<p class="muted news-excerpt">${escapeHtml(excerpt)}</p>` : ""}
+        <span class="news-item-cta">${n.external ? t("news.viewDetails") : t("news.read")}</span>
       </div>
-    </a>`).join("");
+    </a>`;
+  }).join("");
 }
 
 function renderFaculty(target) {
@@ -278,7 +391,7 @@ function runSearch(query) {
   }
   const hits = [
     ...PAGES.filter((p) => ((isZh() ? (p.titleZh || p.title) : p.title) + p.text).toLowerCase().includes(q)).map((p) => ({ title: isZh() ? (p.titleZh || p.title) : p.title, href: withLang(p.url), kind: t("search.page") })),
-    ...NEWS.map(locNews).filter((n) => (n.title + n.excerpt + n.body).toLowerCase().includes(q)).map((n) => ({ title: n.title, href: withLang(`news.html?slug=${n.slug}`), kind: t("search.news") })),
+    ...getPublishedNews().map(locNews).filter((n) => ((n.title || "") + (n.titleZh || "") + (n.body || "") + (n.bodyZh || "")).toLowerCase().includes(q)).map((n) => ({ title: n.title, href: n.href, kind: t("search.news") })),
     ...FACULTY.filter((f) => (f.name + f.specs + f.role).toLowerCase().includes(q)).map((f) => ({ title: f.name, href: withLang("faculty.html"), kind: t("search.faculty") }))
   ];
   box.innerHTML = hits.length
@@ -289,7 +402,7 @@ function runSearch(query) {
 function renderNewsDetail() {
   const params = new URLSearchParams(location.search);
   const slug = params.get("slug");
-  const article = locNews(NEWS.find((n) => n.slug === slug) || {});
+  const article = locNews(getPublishedNews().find((n) => n.slug === slug) || {});
   const detail = document.getElementById("news-detail");
   const listWrap = document.getElementById("news-list-wrap");
   if (!detail) return;
@@ -300,12 +413,36 @@ function renderNewsDetail() {
   }
   listWrap.classList.add("hidden");
   detail.classList.remove("hidden");
+  const paragraphs = (article.body || "").split("\n\n").filter(Boolean).map((p) => `<p>${escapeHtml(p)}</p>`).join("");
   detail.innerHTML = `
-    <p class="crumbs"><a href="${withLang("news.html")}">${t("nav.news")}</a> / ${article.tag}</p>
-    <h1>${article.title}</h1>
+    ${newsLangSwitcherHTML()}
+    <p class="crumbs"><a href="${withLang("news.html")}">${t("nav.news")}</a>${article.tag ? ` / ${article.tag}` : ""}</p>
+    <h1>${escapeHtml(article.title)}</h1>
     <p class="muted">${formatDate(article.date)}</p>
-    ${article.body.split("\n\n").map((p) => `<p>${p}</p>`).join("")}
-    <p><a class="btn btn-outline" href="${withLang("news.html")}">${t("news.back")}</a></p>`;
+    ${paragraphs || `<p class="muted">${t("news.noBody")}</p>`}
+    <p class="cta-row">${article.url ? `<a class="btn btn-navy" href="${escapeHtml(article.url)}" target="_blank" rel="noreferrer">${t("news.viewDetails")}</a>` : ""}
+    <a class="btn btn-outline" href="${withLang("news.html")}">${t("news.back")}</a></p>
+    <p class="muted source-ref">${t("home.source")}</p>`;
+}
+
+function decorateLinks() {
+  document.querySelectorAll("a[href]").forEach((a) => {
+    const href = a.getAttribute("href") || "";
+    if (!href || href.startsWith("#") || a.classList.contains("skip") || a.classList.contains("brand") || a.classList.contains("footer-brand")) return;
+    const external = /^(https?:|mailto:|tel:)/i.test(href);
+    a.classList.toggle("link-out", external);
+    a.classList.toggle("link-in", !external);
+    if (external) {
+      a.setAttribute("target", "_blank");
+      a.setAttribute("rel", "noopener noreferrer");
+    }
+    if (a.closest(".nav, .nav-tools, .notice-bar, .footer, .cta-row, .related-links, .source-ref, .news-lang-switch") || a.classList.contains("btn") || a.classList.contains("news-item") || a.querySelector(".link-hint")) return;
+    if (a.querySelector("img") && [...a.childNodes].every((n) => n.nodeType !== Node.TEXT_NODE || !n.textContent.trim())) return;
+    const hint = document.createElement("span");
+    hint.className = `link-hint ${external ? "link-hint-out" : "link-hint-in"}`;
+    hint.textContent = external ? t("link.outHint") : t("link.inHint");
+    a.appendChild(hint);
+  });
 }
 
 function bindNav() {
@@ -355,23 +492,274 @@ function bindNav() {
   });
 }
 
+function escapeHtml(value) {
+  return String(value ?? "").replace(/[&<>"']/g, (ch) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
+  }[ch]));
+}
+
+function chunkForTranslate(text, size = 420) {
+  const parts = [];
+  let rest = String(text || "").trim();
+  while (rest.length > size) {
+    let cut = rest.lastIndexOf("\n", size);
+    if (cut < 80) cut = rest.lastIndexOf(" ", size);
+    if (cut < 80) cut = size;
+    parts.push(rest.slice(0, cut).trim());
+    rest = rest.slice(cut).trim();
+  }
+  if (rest) parts.push(rest);
+  return parts;
+}
+
+async function translateText(text, langpair) {
+  const chunks = chunkForTranslate(text);
+  if (!chunks.length) return "";
+  const translated = [];
+  for (const chunk of chunks) {
+    const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(chunk)}&langpair=${langpair}`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error("translate failed");
+    const data = await res.json();
+    translated.push(data.responseData?.translatedText || chunk);
+  }
+  return translated.join("\n\n");
+}
+
+function bilingualSyncState(title, titleZh, body, bodyZh) {
+  const enTitle = (title || "").trim();
+  const zhTitle = (titleZh || "").trim();
+  const enBody = (body || "").trim();
+  const zhBody = (bodyZh || "").trim();
+  const titlesOk = !!(enTitle && zhTitle);
+  const bodiesOk = (!enBody && !zhBody) || !!(enBody && zhBody);
+  const ok = titlesOk && bodiesOk;
+  let reason = "ok";
+  if (!enTitle || !zhTitle) reason = "titles";
+  else if ((enBody && !zhBody) || (zhBody && !enBody)) reason = "bodies";
+  return { ok, reason, titlesOk, bodiesOk };
+}
+
+function bindAdminNews() {
+  const form = document.getElementById("admin-news-form");
+  const table = document.querySelector("#admin-news-table tbody");
+  const status = document.getElementById("admin-status");
+  const formTitle = document.getElementById("admin-form-title");
+  if (!form || !table) return;
+
+  const showStatus = (message) => {
+    status.textContent = message;
+    status.classList.remove("hidden");
+  };
+
+  const closeForm = () => {
+    form.reset();
+    document.getElementById("admin-slug").value = "";
+    form.classList.add("hidden");
+    formTitle.textContent = t("admin.create");
+  };
+
+  const renderTable = () => {
+    const items = getActiveNews();
+    table.innerHTML = items.map((item) => {
+      return `<tr data-slug="${escapeHtml(item.slug)}">
+        <td>${escapeHtml(item.order)}</td>
+        <td>${escapeHtml(item.status)}</td>
+        <td>${escapeHtml(item.date || "")}${item.top ? ` <span class="tag">TOP</span>` : ""}</td>
+        <td><strong>EN</strong> ${escapeHtml(item.title)}<br><strong>中文</strong> ${escapeHtml(item.titleZh || "—")}</td>
+        <td>${bilingualSyncState(item.title, item.titleZh, item.body, item.bodyZh).ok ? t("admin.syncOk") : t("admin.syncNo")}</td>
+        <td>${item.url ? `<a href="${escapeHtml(item.url)}" target="_blank" rel="noreferrer">${t("news.viewDetails")}</a>` : "—"}</td>
+        <td class="admin-actions">
+          <button class="btn btn-outline" type="button" data-edit="${escapeHtml(item.slug)}">${t("admin.update")}</button>
+          <button class="btn btn-outline" type="button" data-delete="${escapeHtml(item.slug)}">${t("admin.delete")}</button>
+        </td>
+      </tr>`;
+    }).join("");
+  };
+
+  const openForm = (item) => {
+    form.classList.remove("hidden");
+    formTitle.textContent = item ? t("admin.update") : t("admin.create");
+    document.getElementById("admin-slug").value = item?.slug || "";
+    form.date.value = item?.date || "";
+    form.url.value = item?.url || "";
+    form.order.value = item?.order || getActiveNews().length + 1;
+    form.status.value = item ? (item.status || "published") : "draft";
+    form.title.value = item?.title || "";
+    form.body.value = item?.body || "";
+    form.titleZh.value = item?.titleZh || "";
+    form.bodyZh.value = item?.bodyZh || "";
+    form.top.checked = !!item?.top;
+    ["title", "body", "titleZh", "bodyZh"].forEach((name) => {
+      form[name].dataset.filledBy = item ? "user" : "";
+    });
+    updateAdminPreview();
+    form.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  const updateAdminPreview = () => {
+    const dateLabel = form.date.value ? formatDate(form.date.value) : "";
+    document.getElementById("preview-date-en").textContent = dateLabel;
+    document.getElementById("preview-date-zh").textContent = dateLabel;
+    document.getElementById("preview-title-en").textContent = form.title.value || t("admin.previewEmpty");
+    document.getElementById("preview-title-zh").textContent = form.titleZh.value || t("admin.previewEmpty");
+    document.getElementById("preview-body-en").textContent = form.body.value || t("admin.previewEmpty");
+    document.getElementById("preview-body-zh").textContent = form.bodyZh.value || t("admin.previewEmpty");
+    const sync = bilingualSyncState(form.title.value, form.titleZh.value, form.body.value, form.bodyZh.value);
+    const flag = document.getElementById("admin-sync");
+    flag.classList.toggle("is-ok", sync.ok);
+    flag.classList.toggle("is-warn", !sync.ok);
+    flag.textContent = sync.ok ? t("admin.syncOk") : (sync.reason === "bodies" ? t("admin.syncBodies") : t("admin.syncTitles"));
+    return sync;
+  };
+
+  const fillTranslation = async (fromName, toName, langpair, force) => {
+    const source = form[fromName];
+    const target = form[toName];
+    const text = source.value.trim();
+    if (!text) return;
+    if (!force && target.value.trim() && target.dataset.filledBy === "user") return;
+    target.dataset.busy = "1";
+    try {
+      const result = await translateText(text, langpair);
+      if (result) {
+        target.value = result;
+        target.dataset.filledBy = "auto";
+        updateAdminPreview();
+      }
+    } catch {
+      showStatus(t("admin.translateFail"));
+    } finally {
+      delete target.dataset.busy;
+    }
+  };
+
+  const translateTimers = {};
+  const scheduleAutoTranslate = (fromName, toName, langpair) => {
+    clearTimeout(translateTimers[fromName]);
+    translateTimers[fromName] = setTimeout(() => fillTranslation(fromName, toName, langpair, false), 700);
+  };
+
+  form.addEventListener("input", (event) => {
+    const field = event.target;
+    if (!["title", "titleZh", "body", "bodyZh", "date"].includes(field.name)) {
+      updateAdminPreview();
+      return;
+    }
+    if (["title", "titleZh", "body", "bodyZh"].includes(field.name)) {
+      field.dataset.filledBy = "user";
+      const pair = field.dataset.pair;
+      const fromLang = field.dataset.lang;
+      if (pair && fromLang) {
+        const langpair = fromLang === "en" ? "en|zh-TW" : "zh-TW|en";
+        scheduleAutoTranslate(field.name, pair, langpair);
+      }
+    }
+    updateAdminPreview();
+  });
+
+  form.querySelectorAll("[data-translate-from]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      fillTranslation(btn.dataset.translateFrom, btn.dataset.translateTo, btn.dataset.langpair, true);
+    });
+  });
+
+  document.getElementById("admin-check-sync").addEventListener("click", () => {
+    const sync = updateAdminPreview();
+    showStatus(sync.ok ? t("admin.syncOk") : (sync.reason === "bodies" ? t("admin.syncBodies") : t("admin.syncTitles")));
+  });
+
+  document.getElementById("admin-new").addEventListener("click", () => openForm(null));
+  document.getElementById("admin-cancel").addEventListener("click", closeForm);
+  document.getElementById("admin-restore").addEventListener("click", () => {
+    if (!confirm(t("admin.restoreConfirm"))) return;
+    restoreDefaultNews();
+    closeForm();
+    renderTable();
+    showStatus(t("admin.restored"));
+  });
+
+  table.addEventListener("click", (event) => {
+    const editSlug = event.target.closest("[data-edit]")?.getAttribute("data-edit");
+    const deleteSlug = event.target.closest("[data-delete]")?.getAttribute("data-delete");
+    if (editSlug) {
+      const item = getActiveNews().find((n) => n.slug === editSlug);
+      if (item) openForm(item);
+    }
+    if (deleteSlug) {
+      if (!confirm(t("admin.deleteConfirm"))) return;
+      saveActiveNews(getActiveNews().filter((n) => n.slug !== deleteSlug));
+      if (document.getElementById("admin-slug").value === deleteSlug) closeForm();
+      renderTable();
+      showStatus(t("admin.deleted"));
+    }
+  });
+
+  form.addEventListener("submit", (event) => {
+    event.preventDefault();
+    const data = Object.fromEntries(new FormData(form).entries());
+    const current = getActiveNews();
+    const editing = data.slug;
+    const item = {
+      slug: editing || newsSlug(data.title || data.titleZh, current),
+      date: data.date,
+      url: (data.url || "").trim(),
+      order: Number(data.order) || current.length + 1,
+      status: data.status === "draft" ? "draft" : "published",
+      top: form.top.checked,
+      title: (data.title || "").trim(),
+      titleZh: (data.titleZh || "").trim(),
+      body: (data.body || "").trim(),
+      bodyZh: (data.bodyZh || "").trim()
+    };
+    if (!item.title || !item.titleZh) {
+      showStatus(t("admin.needTitles"));
+      return;
+    }
+    const sync = bilingualSyncState(item.title, item.titleZh, item.body, item.bodyZh);
+    if (item.status === "published" && !sync.ok) {
+      showStatus(t("admin.publishBlocked"));
+      form.status.value = "draft";
+      item.status = "draft";
+      updateAdminPreview();
+      return;
+    }
+    const next = editing
+      ? current.map((n) => (n.slug === editing ? { ...n, ...item } : n))
+      : [item, ...current];
+    saveActiveNews(next);
+    closeForm();
+    renderTable();
+    showStatus(t("admin.synced"));
+  });
+
+  renderTable();
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   const page = document.body.dataset.page;
   document.body.classList.toggle("menu-collapsed", isMenuCollapsed());
   mountChrome(page);
   applyI18n();
   bindNav();
+  const liveNews = getPublishedNews();
   const newsHome = document.getElementById("home-news");
-  if (newsHome) renderNewsList(newsHome, NEWS, 6);
+  if (newsHome) renderNewsList(newsHome, liveNews);
   const newsAll = document.getElementById("all-news");
-  if (newsAll) renderNewsList(newsAll, NEWS);
+  if (newsAll) renderNewsList(newsAll, liveNews);
   if (document.getElementById("news-detail")) renderNewsDetail();
   const faculty = document.getElementById("faculty-grid");
   if (faculty) renderFaculty(faculty);
   const gallery = document.getElementById("gallery");
   if (gallery) renderGallery(gallery);
   const highlights = document.getElementById("highlights-news");
-  if (highlights) renderNewsList(highlights, NEWS.filter((n) => n.tag !== "Office"));
+  if (highlights) renderNewsList(highlights, liveNews.filter((n) => n.tag !== "Office"));
+  bindNewsLangSwitch();
+  if (page === "admin-news.html") bindAdminNews();
   const form = document.getElementById("contact-form");
   if (form) {
     form.addEventListener("submit", (e) => {
@@ -383,4 +771,5 @@ document.addEventListener("DOMContentLoaded", () => {
       form.reset();
     });
   }
+  decorateLinks();
 });

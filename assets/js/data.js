@@ -1,15 +1,227 @@
 const NEWS = [
-  { slug: "spring-2027-apply", date: "2026-08-19", title: "Spring 2027, apply now (Sep 14 – Oct 14)", titleZh: "2027 年春季班開放申請（9/14–10/14）", tag: "Admissions", tagZh: "招生", excerpt: "This track is open to international students only. Apply online through FJCU’s international admissions system.", excerptZh: "本管道僅供國際學生申請，請至輔大國際學位生申請系統報名。", body: "Fu Jen imMBA is now accepting applications for Spring 2027. The application window is 14 September to 14 October. This English-taught track is open to international students only. Local applicants should use the Chinese admissions pathway.\n\nApply online at the FJCU International Degree Student Application System and prepare an English autobiography, study plan, English proficiency certificate (CEFR B2 preferred), two recommendation letters, and any supporting materials.", bodyZh: "輔大 imMBA 2027 年春季班開放申請，時間為 9 月 14 日至 10 月 14 日。此全英語學程僅供國際學生；本籍生請依中文招生管道辦理。\n\n請至輔大國際學位生申請系統線上報名，並準備英文自傳、讀書計畫、英語能力證明（建議 CEFR B2）、兩封推薦信及其他有助審查之資料。" },
-  { slug: "career-platform", date: "2025-01-30", title: "College of Management Career Platform – Job Openings", titleZh: "管理學院職涯平台－工作職缺", tag: "Career", tagZh: "職涯", excerpt: "Explore current openings shared through the College of Management career platform.", excerptZh: "透過管理學院職涯平台查看實習與職缺。", body: "The College of Management career platform lists internships and full-time roles for students and alumni. Current students may contact the imMBA office for access guidance and advising.", bodyZh: "管理學院職涯平台提供實習與正職資訊。在學生可向 imMBA 辦公室洽詢使用方式與職涯諮詢。" },
-  { slug: "how-much-is-possible", date: "2026-09-08", title: "How much is possible in two years?", titleZh: "碩士兩年，可以有多大可能？", tag: "Program", tagZh: "學程", excerpt: "A fully English-taught MBA, a 1:1 international classroom, and dual-degree pathways in two years.", excerptZh: "全英語 MBA、1:1 國際課堂，以及兩年雙聯路徑。", body: "If you are choosing a graduate program, you may be looking for more than a master’s degree. Fu Jen imMBA offers a fully English-taught environment, classmates from around the world, and the option to study abroad.\n\nJoin the 2027 admissions information session on 29 September, 12:10, LM202. Registration opens 14 September.", bodyZh: "選擇研究所時，你可能要的不只是一張碩士文憑。輔大 imMBA 提供全英語環境、來自世界各地的同學，以及出國學習的機會。\n\n歡迎參加 9 月 29 日 12:10 於 LM202 舉辦的 2027 招生說明會。報名自 9 月 14 日起。" },
-  { slug: "ai-product", date: "2026-09-02", title: "90 Seconds with the Professor｜AI × Product", tag: "Courses", excerpt: "A short introduction to AI-Assisted Digital Product Development.", body: "Starting from a business idea, how can AI support digital product development? In 90 seconds, faculty introduce the thinking behind AI × Product and the skills business students can take into practice." },
-  { slug: "data-analytics", date: "2026-08-26", title: "New Course Spotlight｜Data Analytics for International Business", tag: "Courses", excerpt: "Visualization, statistics, and machine learning for international business decisions.", body: "This academic year, imMBA introduces Data Analytics for International Business, covering data visualization, statistical analysis, and machine learning through real-world applications." },
-  { slug: "ai-digital-product", date: "2026-08-19", title: "New Course Spotlight｜AI-Assisted Digital Product Development", tag: "Courses", excerpt: "Turn a business idea into a working digital product, even without coding experience.", body: "Students learn product design, web development, and data management while building a functional digital product—responding to how AI is changing the way ideas become solutions." },
-  { slug: "summer-pause", date: "2026-08-05", title: "Summer Pause", tag: "Office", excerpt: "The imMBA office observes the university’s August recess.", body: "Every August, Fu Jen Catholic University takes a one-week summer recess. Emails received during the break are answered after the office reopens." },
-  { slug: "iqs-spotlight", date: "2026-07-29", title: "Partner Spotlight | IQS School of Management", tag: "Partners", excerpt: "Barcelona-based dual-degree partner, AACSB accredited, with a tuition discount for imMBA students.", body: "IQS School of Management in Barcelona is a dual-degree partner of Fu Jen imMBA. Students may spend year two in the Master in Industrial Business Management or the Master in International Marketing in a Digital Environment." },
-  { slug: "leaders-changing-world", date: "2026-07-22", title: "What kind of leaders should we cultivate?", tag: "Mission", excerpt: "Professional excellence, ethical judgment, and a commitment to the common good.", body: "AI, sustainability, geopolitics, and global industry are reshaping leadership. imMBA’s Jesuit business-school tradition asks students to pair professional skill with reflective, socially responsible practice." },
-  { slug: "across-the-pacific", date: "2026-07-15", title: "Across the Pacific, one more global partner", tag: "Partners", excerpt: "Discussions with Cal Poly Pomona on a possible 1+1 dual master’s pathway.", body: "Faculty from Fu Jen’s College of Management visited California State Polytechnic University, Pomona to discuss collaboration, including a possible 1+1 dual master’s for imMBA." }
+  {
+    slug: "spring-2027-apply",
+    date: "2026-08-19",
+    top: true,
+    tag: "Admissions",
+    tagZh: "招生",
+    title: 'TOP Spring 2027, apply NOW!! (Sep 14 - Oct 14) - This track is open to international students only',
+    titleZh: 'TOP (國際經管-全英MBA) 116甄試招生報名：2026/09/30-10/13',
+    url: "https://www.management.fju.edu.tw/esubweb/immbaengindex/news-detail.php?NID=187",
+    urlZh: "https://www.management.fju.edu.tw/subweb/immba/news-detail.php?NID=2689"
+  },
+  {
+    slug: "career-platform",
+    date: "2025-01-30",
+    top: true,
+    tag: "Career",
+    tagZh: "職涯",
+    title: 'TOP College of Management Career Platform – Job Openings',
+    titleZh: 'TOP 管理學院職涯平台-工作職缺',
+    url: "https://www.management.fju.edu.tw/esubweb/immbaengindex/news-detail.php?NID=398",
+    urlZh: "https://www.management.fju.edu.tw/subweb/immba/news-detail.php?NID=2905"
+  },
+  {
+    slug: "bond-university",
+    date: "2026-10-13",
+    top: false,
+    tag: "Partners",
+    tagZh: "夥伴",
+    title: "【Next Stop: Australia's Gold Coast? | imMBA × Bond University】",
+    titleZh: '【下一站，澳洲黃金海岸？｜國際經管imMBA 與 Bond University 洽談 1+1 雙碩士合作】',
+    url: "https://www.management.fju.edu.tw/esubweb/immbaengindex/news-detail.php?NID=428",
+    urlZh: "https://www.management.fju.edu.tw/subweb/immba/news-detail.php?NID=3417"
+  },
+  {
+    slug: "ut-dallas",
+    date: "2026-10-06",
+    top: false,
+    tag: "Partners",
+    tagZh: "夥伴",
+    title: "【imMBA × UT Dallas | Dual Master's Collaboration Moving Forward】",
+    titleZh: '【國際經管 imMBA × UT Dallas｜雙碩士合作持續推進中】',
+    url: "https://www.management.fju.edu.tw/esubweb/immbaengindex/news-detail.php?NID=426",
+    urlZh: "https://www.management.fju.edu.tw/subweb/immba/news-detail.php?NID=3415"
+  },
+  {
+    slug: "info-session-recap",
+    date: "2026-09-29",
+    top: false,
+    tag: "Admissions",
+    tagZh: "招生",
+    title: '【9/29 Admissions Info Session Recap｜Local Student Applications Open Tomorrow!】',
+    titleZh: '【 9/29 招生說明會重點回顧｜明天開始報名！】',
+    url: "https://www.management.fju.edu.tw/esubweb/immbaengindex/news-detail.php?NID=424",
+    urlZh: "https://www.management.fju.edu.tw/subweb/immba/news-detail.php?NID=3412"
+  },
+  {
+    slug: "two-years-more",
+    date: "2026-09-22",
+    top: false,
+    tag: "Program",
+    tagZh: "學程",
+    title: "【Two Years, More Than One Master's Degree.】",
+    titleZh: '【 碩士兩年，不只一個學位。】',
+    url: "https://www.management.fju.edu.tw/esubweb/immbaengindex/news-detail.php?NID=423",
+    urlZh: "https://www.management.fju.edu.tw/subweb/immba/news-detail.php?NID=3408"
+  },
+  {
+    slug: "intl-info-session",
+    date: "2026-09-15",
+    top: false,
+    tag: "Admissions",
+    tagZh: "招生",
+    title: '【International Students: Get to Know Fu Jen imMBA at Our Info Session!】',
+    titleZh: '【你身邊有正在考慮 MBA 的國際學生嗎？】',
+    url: "https://www.management.fju.edu.tw/esubweb/immbaengindex/news-detail.php?NID=422",
+    urlZh: "https://www.management.fju.edu.tw/subweb/immba/news-detail.php?NID=3402"
+  },
+  {
+    slug: "how-much-is-possible",
+    date: "2026-09-08",
+    top: false,
+    tag: "Program",
+    tagZh: "學程",
+    title: '【How much is possible in two years?】',
+    titleZh: '【碩士兩年，可以有多大可能？】',
+    url: "https://www.management.fju.edu.tw/esubweb/immbaengindex/news-detail.php?NID=421",
+    urlZh: "https://www.management.fju.edu.tw/subweb/immba/news-detail.php?NID=3396"
+  },
+  {
+    slug: "ai-product",
+    date: "2026-09-02",
+    top: false,
+    tag: "Courses",
+    tagZh: "課程",
+    title: '【90 Seconds with the Professor｜AI × Product】',
+    titleZh: '【90 Seconds with the Professor｜AI × Product】',
+    url: "https://www.management.fju.edu.tw/esubweb/immbaengindex/news-detail.php?NID=420",
+    urlZh: "https://www.management.fju.edu.tw/subweb/immba/news-detail.php?NID=3391"
+  },
+  {
+    slug: "data-analytics",
+    date: "2026-08-26",
+    top: false,
+    tag: "Courses",
+    tagZh: "課程",
+    title: '【New Course Spotlight｜Data Analytics for International Business】',
+    titleZh: '【New Course Spotlight｜Data Analytics for International Business】',
+    url: "https://www.management.fju.edu.tw/esubweb/immbaengindex/news-detail.php?NID=419",
+    urlZh: "https://www.management.fju.edu.tw/subweb/immba/news-detail.php?NID=3387"
+  },
+  {
+    slug: "ai-digital-product",
+    date: "2026-08-19",
+    top: false,
+    tag: "Courses",
+    tagZh: "課程",
+    title: '【New Course Spotlight｜AI-Assisted Digital Product Development】',
+    titleZh: '【New Course Spotlight｜AI-Assisted Digital Product Development】',
+    url: "https://www.management.fju.edu.tw/esubweb/immbaengindex/news-detail.php?NID=418",
+    urlZh: "https://www.management.fju.edu.tw/subweb/immba/news-detail.php?NID=3383"
+  },
+  {
+    slug: "summer-pause",
+    date: "2026-08-05",
+    top: false,
+    tag: "Office",
+    tagZh: "辦公室",
+    title: '【Summer Pause】',
+    titleZh: '【Summer Pause】',
+    url: "https://www.management.fju.edu.tw/esubweb/immbaengindex/news-detail.php?NID=416",
+    urlZh: "https://www.management.fju.edu.tw/subweb/immba/news-detail.php?NID=3379"
+  },
+  {
+    slug: "iqs-spotlight",
+    date: "2026-07-29",
+    top: false,
+    tag: "Partners",
+    tagZh: "夥伴",
+    title: '【Partner Spotlight | IQS School of Management】',
+    titleZh: '【Partner Spotlight｜IQS School of Management】',
+    url: "https://www.management.fju.edu.tw/esubweb/immbaengindex/news-detail.php?NID=415",
+    urlZh: "https://www.management.fju.edu.tw/subweb/immba/news-detail.php?NID=3376"
+  },
+  {
+    slug: "leaders-changing-world",
+    date: "2026-07-22",
+    top: false,
+    tag: "Mission",
+    tagZh: "理念",
+    title: '【What Kind of Leaders Should We Cultivate in a Rapidly Changing World?】',
+    titleZh: '【當世界快速變動，我們該培養什麼樣的領導者？】',
+    url: "https://www.management.fju.edu.tw/esubweb/immbaengindex/news-detail.php?NID=413",
+    urlZh: "https://www.management.fju.edu.tw/subweb/immba/news-detail.php?NID=3370"
+  },
+  {
+    slug: "across-the-pacific",
+    date: "2026-07-15",
+    top: false,
+    tag: "Partners",
+    tagZh: "夥伴",
+    title: '【Across the Pacific, One More Global Partner】',
+    titleZh: '【跨越太平洋，國際夥伴再＋1】',
+    url: "https://www.management.fju.edu.tw/esubweb/immbaengindex/news-detail.php?NID=411",
+    urlZh: "https://www.management.fju.edu.tw/subweb/immba/news-detail.php?NID=3367"
+  },
+  {
+    slug: "building-partnerships",
+    date: "2026-07-07",
+    top: false,
+    tag: "Partners",
+    tagZh: "夥伴",
+    title: '【Building New Global Partnerships】',
+    titleZh: '【深化國際合作，共創雙碩士學習機會】',
+    url: "https://www.management.fju.edu.tw/esubweb/immbaengindex/news-detail.php?NID=410",
+    urlZh: "https://www.management.fju.edu.tw/subweb/immba/news-detail.php?NID=3366"
+  },
+  {
+    slug: "sdgs",
+    date: "2026-06-30",
+    top: false,
+    tag: "Insights",
+    tagZh: "觀點",
+    title: '【Business Insights | What Are the SDGs?】',
+    titleZh: '【Business Insights｜什麼是 SDGs？】',
+    url: "https://www.management.fju.edu.tw/esubweb/immbaengindex/news-detail.php?NID=409",
+    urlZh: "https://www.management.fju.edu.tw/subweb/immba/news-detail.php?NID=3364"
+  },
+  {
+    slug: "four-palme",
+    date: "2026-06-24",
+    top: false,
+    tag: "Program",
+    tagZh: "學程",
+    title: "【imMBA's International Learning Environment Starts with a Four-Palme Business School】",
+    titleZh: '【國際經管(imMBA)國際化學習環境，來自四棕櫚葉管理學院的支持】',
+    url: "https://www.management.fju.edu.tw/esubweb/immbaengindex/news-detail.php?NID=407",
+    urlZh: "https://www.management.fju.edu.tw/subweb/immba/news-detail.php?NID=3362"
+  },
+  {
+    slug: "two-weeks",
+    date: "2026-06-16",
+    top: false,
+    tag: "Program",
+    tagZh: "學程",
+    title: '【What Would You Do with Two Weeks for Self-Directed Learning?】',
+    titleZh: '【如果有兩週不用進教室，你會拿來做什麼？】',
+    url: "https://www.management.fju.edu.tw/esubweb/immbaengindex/news-detail.php?NID=406",
+    urlZh: "https://www.management.fju.edu.tw/subweb/immba/news-detail.php?NID=3360"
+  },
+  {
+    slug: "take-fujen-with-you",
+    date: "2026-06-09",
+    top: false,
+    tag: "Campus",
+    tagZh: "校園",
+    title: '【As You Move Forward, Take a Piece of Fu Jen With You.】',
+    titleZh: '【卓越啟程，也別忘了偶爾「熊熊」想起輔大】',
+    url: "https://www.management.fju.edu.tw/esubweb/immbaengindex/news-detail.php?NID=403",
+    urlZh: "https://www.management.fju.edu.tw/subweb/immba/news-detail.php?NID=3356"
+  },
 ];
+
+const NEWS_SOURCE = "https://www.management.fju.edu.tw/subweb/immba/news.php";
 
 const FACULTY = [
   { name: "Yi-Ning Tu", role: "Associate Professor & Chair, imMBA", edu: "Ph.D. in Information Management, National Chengchi University", specs: "Data Mining, Text Mining, AI, Machine Learning, Information Retrieval", email: "082435@mail.fju.edu.tw", tel: "Ext. 3988 · LM208-2" },

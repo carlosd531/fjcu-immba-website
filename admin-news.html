@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AdminNews | Fu Jen imMBA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/styles.css?v=ux15">
+</head>
+<body data-page="admin-news.html">
+  <main id="main">
+    <section class="section">
+      <div class="wrap">
+        <p class="muted" data-i18n="admin.lead">Each announcement is one record with shared date, link, order, and status, plus Chinese and English titles and content. The public site shows the language the visitor chooses.</p>
+        <p class="cta-row">
+          <button class="btn btn-gold" type="button" id="admin-new" data-i18n="admin.create">Add a new announcement</button>
+          <button class="btn btn-outline" type="button" id="admin-restore" data-i18n="admin.restore">Restore the default announcement list</button>
+          <a class="btn btn-navy" href="news.html" data-i18n="admin.viewFront">View the current announcement list</a>
+        </p>
+        <p id="admin-status" class="admin-status hidden" role="status"></p>
+
+        <form id="admin-news-form" class="panel hidden">
+          <input type="hidden" name="slug" id="admin-slug">
+          <h3 id="admin-form-title" data-i18n="admin.create">Add a new announcement</h3>
+
+          <fieldset class="admin-fieldset">
+            <legend data-i18n="admin.shared">Shared fields</legend>
+            <div class="grid-2">
+              <label><span data-i18n="admin.date">Date</span> <input type="date" name="date" required></label>
+              <label><span data-i18n="admin.url">Link URL</span> <input type="url" name="url" placeholder="https://"></label>
+              <label><span data-i18n="admin.order">Display order</span> <input type="number" name="order" min="1" step="1" required></label>
+              <label><span data-i18n="admin.status">Status</span>
+                <select name="status">
+                  <option value="published" data-i18n="admin.published">Published</option>
+                  <option value="draft" data-i18n="admin.draft">Draft</option>
+                </select>
+              </label>
+              <label class="admin-check"><input type="checkbox" name="top"> <span data-i18n="admin.top">Pin as TOP</span></label>
+            </div>
+          </fieldset>
+
+          <p class="muted" data-i18n="admin.bilingualHelp">Create both languages together. The other language is filled by automatic translation and you can edit it. Preview English and Chinese before you publish. Saving or deleting applies to one record, so both versions stay together.</p>
+          <div class="grid-2">
+            <fieldset class="admin-fieldset">
+              <legend data-i18n="admin.enFields">English</legend>
+              <label><span data-i18n="admin.title">English title</span> <input type="text" name="title" data-lang="en" data-pair="titleZh" required></label>
+              <p class="cta-row"><button class="btn btn-outline" type="button" data-translate-from="title" data-translate-to="titleZh" data-langpair="en|zh-TW" data-i18n="admin.translateZh">Auto-translate to Chinese</button></p>
+              <label><span data-i18n="admin.body">English content</span> <textarea name="body" rows="8" data-lang="en" data-pair="bodyZh"></textarea></label>
+              <p class="cta-row"><button class="btn btn-outline" type="button" data-translate-from="body" data-translate-to="bodyZh" data-langpair="en|zh-TW" data-i18n="admin.translateZh">Auto-translate to Chinese</button></p>
+            </fieldset>
+            <fieldset class="admin-fieldset">
+              <legend data-i18n="admin.zhFields">Chinese</legend>
+              <label><span data-i18n="admin.titleZh">Chinese title</span> <input type="text" name="titleZh" data-lang="zh" data-pair="title" required></label>
+              <p class="cta-row"><button class="btn btn-outline" type="button" data-translate-from="titleZh" data-translate-to="title" data-langpair="zh-TW|en" data-i18n="admin.translateEn">Auto-translate to English</button></p>
+              <label><span data-i18n="admin.bodyZh">Chinese content</span> <textarea name="bodyZh" rows="8" data-lang="zh" data-pair="body"></textarea></label>
+              <p class="cta-row"><button class="btn btn-outline" type="button" data-translate-from="bodyZh" data-translate-to="body" data-langpair="zh-TW|en" data-i18n="admin.translateEn">Auto-translate to English</button></p>
+            </fieldset>
+          </div>
+
+          <fieldset class="admin-fieldset">
+            <legend data-i18n="admin.preview">Read / Preview</legend>
+            <p id="admin-sync" class="admin-sync" role="status"></p>
+            <p class="cta-row">
+              <button class="btn btn-outline" type="button" id="admin-check-sync" data-i18n="admin.checkSync">Check whether the two versions are synchronized</button>
+            </p>
+            <div class="grid-2 admin-preview">
+              <article class="card">
+                <h3>English</h3>
+                <p class="date" id="preview-date-en"></p>
+                <h4 id="preview-title-en"></h4>
+                <div id="preview-body-en" class="muted"></div>
+              </article>
+              <article class="card">
+                <h3>中文</h3>
+                <p class="date" id="preview-date-zh"></p>
+                <h4 id="preview-title-zh"></h4>
+                <div id="preview-body-zh" class="muted"></div>
+              </article>
+            </div>
+          </fieldset>
+
+          <p class="cta-row">
+            <button class="btn btn-navy" type="submit" id="admin-save" data-i18n="admin.save">Save both versions as one announcement</button>
+            <button class="btn btn-outline" type="button" id="admin-cancel" data-i18n="admin.cancel">Cancel</button>
+          </p>
+        </form>
+
+        <div class="panel admin-table-wrap">
+          <h3 data-i18n="admin.list">Current announcement list</h3>
+          <p class="muted" data-i18n="admin.listHelp">Each row is one bilingual record. Draft items stay in this list and do not appear on the public site.</p>
+          <div class="table-scroll">
+            <table class="admin-table" id="admin-news-table">
+              <thead>
+                <tr>
+                  <th data-i18n="admin.colOrder">Order</th>
+                  <th data-i18n="admin.colStatus">Status</th>
+                  <th data-i18n="admin.colDate">Date</th>
+                  <th data-i18n="admin.colTitle">Titles</th>
+                  <th data-i18n="admin.colSync">Sync</th>
+                  <th data-i18n="admin.colLink">Link URL</th>
+                  <th data-i18n="admin.colActions">Actions</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+  <script src="assets/js/data.js?v=ux15"></script>
+  <script src="assets/js/i18n.js?v=ux15"></script>
+  <script src="assets/js/site.js?v=ux15"></script>
+</body>
+</html>
