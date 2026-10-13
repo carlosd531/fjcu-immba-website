@@ -10,9 +10,14 @@ const I18N = {
     "chrome.brand": "FU JEN Catholic University",
     "chrome.brandSub": "International Management imMBA",
     "chrome.apply": "Apply Now",
-    "chrome.menuOpen": "Show menu",
-    "chrome.menuClose": "Hide menu",
+    "chrome.menuOpen": "Menu",
+    "chrome.menuClose": "Collapse menu",
+    "chrome.menuHidden": "Menu hidden",
+    "chrome.menuShown": "Menu shown",
     "chrome.lang": "Language",
+    "chrome.langEn": "English",
+    "chrome.langZh": "中文",
+    "chrome.langSwitch": "Switch to {lang}",
     "nav.about": "About",
     "nav.overview": "Overview and Ranking",
     "nav.regulations": "Program Regulations",
@@ -197,9 +202,14 @@ const I18N = {
     "chrome.brand": "輔仁大學",
     "chrome.brandSub": "國際經營管理碩士班 imMBA",
     "chrome.apply": "立即申請",
-    "chrome.menuOpen": "展開選單",
+    "chrome.menuOpen": "選單",
     "chrome.menuClose": "收合選單",
+    "chrome.menuHidden": "選單已收合",
+    "chrome.menuShown": "選單已展開",
     "chrome.lang": "語言",
+    "chrome.langEn": "English",
+    "chrome.langZh": "中文",
+    "chrome.langSwitch": "切換為 {lang}",
     "nav.about": "簡介",
     "nav.overview": "特色與排名",
     "nav.regulations": "本單位規定及辦法",
@@ -474,9 +484,12 @@ function setMenuCollapsed(collapsed) {
   const toggle = document.querySelector(".menu-toggle");
   const nav = document.getElementById("nav");
   if (toggle) {
+    const action = collapsed ? t("chrome.menuOpen") : t("chrome.menuClose");
     toggle.setAttribute("aria-expanded", String(!collapsed));
-    toggle.setAttribute("aria-label", collapsed ? t("chrome.menuOpen") : t("chrome.menuClose"));
-    toggle.setAttribute("title", collapsed ? t("chrome.menuOpen") : t("chrome.menuClose"));
+    toggle.setAttribute("aria-label", action);
+    toggle.setAttribute("title", action);
+    const actionEl = toggle.querySelector(".menu-action");
+    if (actionEl) actionEl.textContent = action;
   }
   if (nav) nav.classList.toggle("open", !collapsed);
 }

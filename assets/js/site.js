@@ -84,8 +84,12 @@ function headerHTML(active) {
               </span>
             </a>
             <div class="action-area">
-              <button class="menu-toggle" type="button" aria-expanded="${!collapsed}" aria-controls="nav" aria-label="${collapsed ? t("chrome.menuOpen") : t("chrome.menuClose")}">
+              <button class="status-toggle lang-toggle" type="button" data-next-lang="${getLang() === "zh" ? "en" : "zh"}" aria-label="${t("chrome.langSwitch", { lang: getLang() === "zh" ? t("chrome.langEn") : t("chrome.langZh") })}">
+                <span class="status-toggle-label">${getLang() === "zh" ? t("chrome.langEn") : t("chrome.langZh")}</span>
+              </button>
+              <button class="status-toggle menu-toggle" type="button" aria-expanded="${!collapsed}" aria-controls="nav" aria-label="${collapsed ? t("chrome.menuOpen") : t("chrome.menuClose")}">
                 <span class="menu-toggle-icon" aria-hidden="true"></span>
+                <span class="status-toggle-label menu-action">${collapsed ? t("chrome.menuOpen") : t("chrome.menuClose")}</span>
               </button>
             </div>
           </div>
@@ -95,10 +99,6 @@ function headerHTML(active) {
             <div class="nav" id="nav">
               ${items.map((item) => navItemHTML(item, active)).join("")}
               <div class="nav-tools">
-                <div class="lang-switch" aria-label="${t("chrome.lang")}">
-                  <a class="${getLang() === "en" ? "is-active" : ""}" href="${langHref("en")}" lang="en" hreflang="en">EN</a>
-                  <a class="${getLang() === "zh" ? "is-active" : ""}" href="${langHref("zh")}" lang="zh-Hant" hreflang="zh-Hant">中文</a>
-                </div>
                 <a class="btn btn-gold" href="${withLang("admissions.html")}">${t("chrome.apply")}</a>
               </div>
             </div>
@@ -313,6 +313,12 @@ function bindNav() {
   if (toggle) {
     toggle.addEventListener("click", () => {
       setMenuCollapsed(!document.body.classList.contains("menu-collapsed"));
+    });
+  }
+  const langToggle = document.querySelector(".lang-toggle");
+  if (langToggle) {
+    langToggle.addEventListener("click", () => {
+      setLang(langToggle.dataset.nextLang === "zh" ? "zh" : "en");
     });
   }
 
