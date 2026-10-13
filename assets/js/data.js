@@ -49,10 +49,12 @@ const PHOTOS = [
 ];
 
 const PAGES = [
-  { title: "Overview and Ranking", titleZh: "學程簡介與排名", url: "about.html", text: "AACSB accredited English-taught MBA Top 3 Taiwan international management dual degree Eduniversal" },
+  { title: "Overview and Ranking", titleZh: "特色與排名", url: "about.html", text: "AACSB accredited English-taught MBA Top 3 Taiwan international management dual degree Eduniversal" },
+  { title: "Program Regulations", titleZh: "本單位規定及辦法", url: "regulations.html", text: "program meeting curriculum committee scholarship bylaw regulations" },
   { title: "Our Learning Environment", titleZh: "學習環境", url: "learning-environment.html", text: "English classroom 1:1 international students Taipei campus Jesuit business school" },
-  { title: "Admissions", titleZh: "招生入學", url: "admissions.html", text: "Spring Fall apply documents tuition scholarship CEFR B2" },
-  { title: "Courses", titleZh: "課程", url: "courses.html", text: "curriculum waiver thesis prerequisites graduation credits" },
+  { title: "Apply for Fu Jen imMBA", titleZh: "MBA招生資訊", url: "admissions.html", text: "Spring Fall apply documents tuition scholarship CEFR B2" },
+  { title: "Scholarships", titleZh: "獎助學金資訊", url: "scholarships.html", text: "President scholarship MOE MOFA tuition reduction NT$68660 NT$40600" },
+  { title: "Curriculum and Requirements", titleZh: "課程與修業規則", url: "courses.html", text: "curriculum waiver thesis prerequisites graduation credits" },
   { title: "Faculty", titleZh: "師資", url: "faculty.html", text: "professors chair Yi-Ning Tu" },
   { title: "Student Guide", titleZh: "就學指引", url: "guide.html", text: "visa housing campus calendar international students Taiwan" },
   { title: "Graduation", titleZh: "畢業資訊", url: "graduation.html", text: "thesis defense advisor requirements" },

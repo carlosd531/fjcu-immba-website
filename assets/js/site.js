@@ -5,11 +5,25 @@ function navItems() {
       href: "about.html",
       children: [
         { label: t("nav.overview"), href: "about.html" },
+        { label: t("nav.regulations"), href: "regulations.html" },
         { label: t("nav.learning"), href: "learning-environment.html" }
       ]
     },
-    { label: t("nav.admissions"), href: "admissions.html" },
-    { label: t("nav.courses"), href: "courses.html" },
+    {
+      label: t("nav.admissions"),
+      href: "admissions.html",
+      children: [
+        { label: t("nav.apply"), href: "admissions.html" },
+        { label: t("nav.scholarships"), href: "scholarships.html" }
+      ]
+    },
+    {
+      label: t("nav.courses"),
+      href: "courses.html",
+      children: [
+        { label: t("nav.curriculum"), href: "courses.html" }
+      ]
+    },
     { label: t("nav.faculty"), href: "faculty.html" },
     { label: t("nav.guide"), href: "guide.html" },
     { label: t("nav.graduation"), href: "graduation.html" },
@@ -21,6 +35,25 @@ function navItems() {
     { label: t("nav.contact"), href: "contact.html" }
   ];
 }
+
+const PAGE_HEROES = {
+  "about.html": { img: 0, title: "about.h1", crumbs: "about.crumbs", eyebrow: "about.eyebrow" },
+  "regulations.html": { img: 2, title: "reg.h1", crumbs: "reg.crumbs", eyebrow: "nav.regulations" },
+  "learning-environment.html": { img: 1, title: "learn.h1", crumbs: "learn.crumbs", eyebrow: "nav.learning" },
+  "admissions.html": { img: 3, title: "adm.h1", crumbs: "adm.crumbs", eyebrow: "nav.apply" },
+  "scholarships.html": { img: 4, title: "sch.h1", crumbs: "sch.crumbs", eyebrow: "nav.scholarships" },
+  "courses.html": { img: 5, title: "crs.h1", crumbs: "crs.crumbs", eyebrow: "nav.curriculum" },
+  "faculty.html": { img: 6, title: "fac.h1", crumbs: "fac.crumbs", eyebrow: "fac.eyebrow" },
+  "guide.html": { img: 7, title: "gui.h1", crumbs: "gui.crumbs", eyebrow: "nav.guide" },
+  "graduation.html": { img: 8, title: "grd.h1", crumbs: "grd.crumbs", eyebrow: "grd.eyebrow" },
+  "dual-degree.html": { img: 9, title: "dua.h1", crumbs: "dua.crumbs", eyebrow: "nav.dual" },
+  "exchange.html": { img: 10, title: "exc.h1", crumbs: "exc.crumbs", eyebrow: "nav.exchange" },
+  "highlights.html": { img: 11, title: "hig.h1", crumbs: "hig.crumbs", eyebrow: "nav.highlights" },
+  "news.html": { img: 0, title: "news.h1", crumbs: "news.crumbs", eyebrow: "news.eyebrow" },
+  "gallery.html": { img: 1, title: "gal.h1", crumbs: "gal.crumbs", eyebrow: "nav.gallery" },
+  "contact.html": { img: 2, title: "con.h1", crumbs: "con.crumbs", eyebrow: "con.eyebrow" },
+  "resources.html": { img: 3, title: "res.h1", crumbs: "res.crumbs", eyebrow: "footer.downloads" }
+};
 
 function langHref(lang) {
   const url = new URL(location.href);
@@ -51,18 +84,24 @@ function headerHTML(active) {
               </span>
             </a>
             <div class="action-area">
-              <div class="lang-switch" aria-label="${t("chrome.lang")}">
-                <a class="${getLang() === "en" ? "is-active" : ""}" href="${langHref("en")}" lang="en" hreflang="en">EN</a>
-                <a class="${getLang() === "zh" ? "is-active" : ""}" href="${langHref("zh")}" lang="zh-Hant" hreflang="zh-Hant">中文</a>
-              </div>
-              <a class="btn btn-gold" href="admissions.html?lang=${getLang()}">${t("chrome.apply")}</a>
-              <button class="menu-toggle" type="button" aria-expanded="${!collapsed}" aria-controls="nav">${collapsed ? t("chrome.menuOpen") : t("chrome.menuClose")}</button>
+              <button class="menu-toggle" type="button" aria-expanded="${!collapsed}" aria-controls="nav" aria-label="${collapsed ? t("chrome.menuOpen") : t("chrome.menuClose")}">
+                <span class="menu-toggle-icon" aria-hidden="true"></span>
+              </button>
             </div>
           </div>
         </div>
         <nav class="navbar" aria-label="${t("nav.about")}">
           <div class="wrap navbar-inner">
-            <div class="nav" id="nav">${items.map((item) => navItemHTML(item, active)).join("")}</div>
+            <div class="nav" id="nav">
+              ${items.map((item) => navItemHTML(item, active)).join("")}
+              <div class="nav-tools">
+                <div class="lang-switch" aria-label="${t("chrome.lang")}">
+                  <a class="${getLang() === "en" ? "is-active" : ""}" href="${langHref("en")}" lang="en" hreflang="en">EN</a>
+                  <a class="${getLang() === "zh" ? "is-active" : ""}" href="${langHref("zh")}" lang="zh-Hant" hreflang="zh-Hant">中文</a>
+                </div>
+                <a class="btn btn-gold" href="${withLang("admissions.html")}">${t("chrome.apply")}</a>
+              </div>
+            </div>
           </div>
         </nav>
       </header>
@@ -126,8 +165,31 @@ function footerHTML() {
           <p><a href="resources.html?lang=${getLang()}">${t("footer.downloads")}</a></p>
         </div>
       </div>
-      <div class="wrap copy">© ${new Date().getFullYear()} ${t("footer.copy")} <a href="${officialUrl()}" target="_blank" rel="noreferrer">${t("footer.official")}</a></div>
+      <div class="wrap copy">
+        © ${new Date().getFullYear()} ${t("footer.copy")}
+        <a href="${officialUrl()}" target="_blank" rel="noreferrer">${t("footer.official")}</a>
+        <p class="source-ref">${t("footer.source")} <a href="${officialUrl()}" target="_blank" rel="noreferrer">${t("footer.sourceLink")}</a></p>
+      </div>
     </footer>`;
+}
+
+function mountPageHero() {
+  const page = document.body.dataset.page;
+  const spec = PAGE_HEROES[page];
+  const main = document.getElementById("main");
+  if (!spec || !main) return;
+  main.querySelectorAll(".page-hero").forEach((el) => el.remove());
+  const img = (typeof PHOTOS !== "undefined" && PHOTOS[spec.img]) || "assets/img/hero-3.jpg";
+  const hero = `
+    <section class="section-hero" aria-label="${t(spec.title)}">
+      <img src="${img}" alt="${t(spec.title)}">
+      <div class="section-hero-inner">
+        <p class="crumbs">${t(spec.crumbs)}</p>
+        <div class="eyebrow">${t(spec.eyebrow)}</div>
+        <h1>${t(spec.title)}</h1>
+      </div>
+    </section>`;
+  main.insertAdjacentHTML("afterbegin", hero);
 }
 
 function mountChrome(active) {
@@ -139,6 +201,7 @@ function mountChrome(active) {
   }
   document.body.insertAdjacentHTML("afterbegin", headerHTML(active));
   document.body.insertAdjacentHTML("beforeend", footerHTML());
+  mountPageHero();
 }
 
 function formatDate(iso) {

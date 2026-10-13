@@ -7,32 +7,26 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/styles.css?v=i18n1">
+  <link rel="stylesheet" href="assets/css/styles.css?v=ux2">
 </head>
 <body data-page="news.html">
   <main id="main">
-    <section class="page-hero">
-      <div class="wrap">
-        <p class="crumbs" data-i18n="news.crumbs">Home / News</p>
-        <div class="eyebrow" data-i18n="news.eyebrow">Announcements</div>
-        <h1 data-i18n="news.h1">News</h1>
-        <div class="search-box" style="max-width:480px;margin-top:16px">
-          <input type="search" data-i18n-placeholder="news.search" placeholder="Search news and pages..." oninput="runSearch(this.value)">
-        </div>
-        <div id="search-results" class="search-results"></div>
-      </div>
-    </section>
     <section class="section">
       <div class="wrap">
         <article id="news-detail" class="hidden"></article>
+        <div class="search-box" style="max-width:480px;margin-bottom:20px">
+          <input type="search" data-i18n-placeholder="news.search" placeholder="Search news and pages..." oninput="runSearch(this.value)">
+        </div>
+        <div id="search-results" class="search-results"></div>
         <div id="news-list-wrap" class="panel">
           <div id="all-news"></div>
         </div>
+        <p class="muted source-ref" data-i18n="home.source">Source: official Fu Jen imMBA announcements, College of Management.</p>
       </div>
     </section>
   </main>
-  <script src="assets/js/data.js"></script>
-  <script src="assets/js/i18n.js"></script>
-  <script src="assets/js/site.js"></script>
+  <script src="assets/js/data.js?v=ux2"></script>
+  <script src="assets/js/i18n.js?v=ux2"></script>
+  <script src="assets/js/site.js?v=ux2"></script>
 </body>
 </html>
