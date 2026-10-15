@@ -55,8 +55,65 @@ function normalizeNewsItem(n, index) {
     title: n.title || "",
     titleZh: n.titleZh || "",
     body: n.body || "",
-    bodyZh: n.bodyZh || ""
+    bodyZh: n.bodyZh || "",
+    images: normalizeNewsImages(n.images)
   };
+}
+
+const NEWS_IMAGE_MAX = 8;
+const NEWS_IMAGE_EDGE = 1400;
+const NEWS_IMAGE_QUALITY = 0.72;
+
+function normalizeNewsImages(images) {
+  if (!Array.isArray(images)) return [];
+  return images.filter((img) => img && img.src).map((img, index) => ({
+    id: img.id || `img-${index}`,
+    src: String(img.src),
+    name: img.name || "",
+    alt: img.alt || img.name || ""
+  }));
+}
+
+function isAllowedImageSrc(src) {
+  return /^(data:image\/[a-zA-Z0-9.+-]+;base64,|https?:\/\/|assets\/)/i.test(src || "");
+}
+
+function newsGalleryHTML(images, className) {
+  const list = normalizeNewsImages(images);
+  if (!list.length) return "";
+  return `<div class="${className}">${list.map((img) => `<img src="${escapeHtml(img.src)}" alt="${escapeHtml(img.alt || "")}">`).join("")}</div>`;
+}
+
+function compressImageFile(file) {
+  return new Promise((resolve, reject) => {
+    if (!file || !/^image\/(png|jpe?g|webp|gif)$/i.test(file.type)) {
+      reject(new Error("type"));
+      return;
+    }
+    const reader = new FileReader();
+    reader.onerror = reject;
+    reader.onload = () => {
+      const image = new Image();
+      image.onerror = reject;
+      image.onload = () => {
+        const scale = Math.min(1, NEWS_IMAGE_EDGE / Math.max(image.width, image.height));
+        const width = Math.max(1, Math.round(image.width * scale));
+        const height = Math.max(1, Math.round(image.height * scale));
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        canvas.getContext("2d").drawImage(image, 0, 0, width, height);
+        resolve({
+          id: `img-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+          src: canvas.toDataURL("image/jpeg", NEWS_IMAGE_QUALITY),
+          name: file.name || "",
+          alt: file.name || ""
+        });
+      };
+      image.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
 }
 
 function sortNews(items) {
@@ -91,8 +148,14 @@ function getPublishedNews() {
 
 function saveActiveNews(items) {
   const next = sortNews(items);
-  localStorage.setItem(NEWS_STORE_KEY, JSON.stringify(next));
-  return next;
+  try {
+    localStorage.setItem(NEWS_STORE_KEY, JSON.stringify(next));
+    return next;
+  } catch {
+    const error = new Error("quota");
+    error.code = "quota";
+    throw error;
+  }
 }
 
 function restoreDefaultNews() {
@@ -167,13 +230,15 @@ function headerHTML(active) {
       <header class="site-header">
         <div class="branding-header">
           <div class="wrap branding-inner">
-            <a class="brand" href="index.html?lang=${getLang()}" aria-label="${t("chrome.brand")} ${t("chrome.brandSub")}">
-              <img class="logo" src="assets/img/fujen-immba-logo-lockup.jpg" alt="">
-              <span class="brand-text">
+            <div class="brand">
+              <a class="brand-logo" href="${withLang("admin-news.html")}" title="${t("admin.logoHint")}" aria-label="${t("admin.logoHint")}">
+                <img class="logo" src="assets/img/fujen-immba-logo-lockup.jpg" alt="${t("admin.logoHint")}">
+              </a>
+              <a class="brand-text" href="${withLang("index.html")}">
                 <strong>${t("chrome.brand")}</strong>
                 <em>${t("chrome.brandSub")}</em>
-              </span>
-            </a>
+              </a>
+            </div>
           </div>
         </div>
         <nav class="navbar" aria-label="${t("nav.about")}">
@@ -258,6 +323,7 @@ function footerHTML() {
 
 function mountPageHero() {
   const page = document.body.dataset.page;
+  if (page === "admin-news.html") return;
   const spec = PAGE_HEROES[page];
   const main = document.getElementById("main");
   if (!spec || !main) return;
@@ -282,8 +348,9 @@ function mountChrome(active) {
     icon.href = "assets/img/fujen-immba-logo-mark.jpg";
     document.head.appendChild(icon);
   }
+  if (active === "admin-news.html") document.body.classList.add("is-admin");
   document.body.insertAdjacentHTML("afterbegin", headerHTML(active));
-  document.body.insertAdjacentHTML("beforeend", footerHTML());
+  if (active !== "admin-news.html") document.body.insertAdjacentHTML("beforeend", footerHTML());
   mountPageHero();
 }
 
@@ -294,7 +361,7 @@ function formatDate(iso) {
 
 function locNews(n) {
   const zh = isZh();
-  const hasContent = !!(n.body || n.bodyZh);
+  const hasContent = !!(n.body || n.bodyZh || (n.images && n.images.length));
   return {
     ...n,
     title: zh ? (n.titleZh || n.title) : (n.title || n.titleZh),
@@ -355,9 +422,13 @@ function renderNewsList(target, items, limit) {
   target.innerHTML = list.map((n) => {
     const preview = String(n.body || "").replace(/\s+/g, " ").trim();
     const excerpt = preview.length > 160 ? `${preview.slice(0, 157)}…` : preview;
+    const thumb = n.images && n.images[0]
+      ? `<img class="news-thumb" src="${escapeHtml(n.images[0].src)}" alt="">`
+      : "";
     return `
-    <a class="news-item ${n.external ? "link-out" : "link-in"}" href="${n.href}" ${n.external ? 'target="_blank" rel="noreferrer"' : ""}>
+    <a class="news-item ${n.images && n.images.length ? "has-image" : ""} ${n.external ? "link-out" : "link-in"}" href="${n.href}" ${n.external ? 'target="_blank" rel="noreferrer"' : ""}>
       <time class="date" datetime="${n.date}">${formatDate(n.date)}</time>
+      ${thumb}
       <div>
         <strong>${escapeHtml(n.title)}</strong>
         ${excerpt ? `<p class="muted news-excerpt">${escapeHtml(excerpt)}</p>` : ""}
@@ -419,7 +490,8 @@ function renderNewsDetail() {
     <p class="crumbs"><a href="${withLang("news.html")}">${t("nav.news")}</a>${article.tag ? ` / ${article.tag}` : ""}</p>
     <h1>${escapeHtml(article.title)}</h1>
     <p class="muted">${formatDate(article.date)}</p>
-    ${paragraphs || `<p class="muted">${t("news.noBody")}</p>`}
+    ${newsGalleryHTML(article.images, "news-gallery")}
+    ${paragraphs || (article.images && article.images.length ? "" : `<p class="muted">${t("news.noBody")}</p>`)}
     <p class="cta-row">${article.url ? `<a class="btn btn-navy" href="${escapeHtml(article.url)}" target="_blank" rel="noreferrer">${t("news.viewDetails")}</a>` : ""}
     <a class="btn btn-outline" href="${withLang("news.html")}">${t("news.back")}</a></p>
     <p class="muted source-ref">${t("home.source")}</p>`;
@@ -428,7 +500,7 @@ function renderNewsDetail() {
 function decorateLinks() {
   document.querySelectorAll("a[href]").forEach((a) => {
     const href = a.getAttribute("href") || "";
-    if (!href || href.startsWith("#") || a.classList.contains("skip") || a.classList.contains("brand") || a.classList.contains("footer-brand")) return;
+    if (!href || href.startsWith("#") || a.classList.contains("skip") || a.classList.contains("brand") || a.classList.contains("brand-logo") || a.classList.contains("brand-text") || a.classList.contains("footer-brand")) return;
     const external = /^(https?:|mailto:|tel:)/i.test(href);
     a.classList.toggle("link-out", external);
     a.classList.toggle("link-in", !external);
@@ -436,7 +508,7 @@ function decorateLinks() {
       a.setAttribute("target", "_blank");
       a.setAttribute("rel", "noopener noreferrer");
     }
-    if (a.closest(".nav, .nav-tools, .notice-bar, .footer, .cta-row, .related-links, .source-ref, .news-lang-switch") || a.classList.contains("btn") || a.classList.contains("news-item") || a.querySelector(".link-hint")) return;
+    if (a.closest(".nav, .nav-tools, .notice-bar, .footer, .cta-row, .related-links, .source-ref, .news-lang-switch, .admin-side-nav, .admin-toolbar") || a.classList.contains("btn") || a.classList.contains("news-item") || a.querySelector(".link-hint")) return;
     if (a.querySelector("img") && [...a.childNodes].every((n) => n.nodeType !== Node.TEXT_NODE || !n.textContent.trim())) return;
     const hint = document.createElement("span");
     hint.className = `link-hint ${external ? "link-hint-out" : "link-hint-in"}`;
@@ -551,27 +623,74 @@ function bindAdminNews() {
   const formTitle = document.getElementById("admin-form-title");
   if (!form || !table) return;
 
+  document.querySelectorAll(".admin-side-nav a[href], .admin-toolbar a[href]").forEach((a) => {
+    const href = a.getAttribute("href");
+    if (href && !href.startsWith("http")) a.setAttribute("href", withLang(href));
+  });
+
   const showStatus = (message) => {
     status.textContent = message;
     status.classList.remove("hidden");
   };
 
+  let draftImages = [];
+
+  const renderImageList = () => {
+    const box = document.getElementById("admin-image-list");
+    if (!box) return;
+    box.innerHTML = draftImages.length
+      ? draftImages.map((img) => `
+        <figure class="admin-image-card">
+          <img src="${escapeHtml(img.src)}" alt="">
+          <figcaption>${escapeHtml(img.name || t("admin.imageUntitled"))}</figcaption>
+          <button class="btn btn-outline" type="button" data-remove-image="${escapeHtml(img.id)}">${t("admin.imageRemove")}</button>
+        </figure>`).join("")
+      : `<p class="muted">${t("admin.imagesEmpty")}</p>`;
+  };
+
   const closeForm = () => {
     form.reset();
+    draftImages = [];
+    renderImageList();
+    const picker = document.getElementById("admin-images");
+    if (picker) picker.value = "";
+    const urlField = document.getElementById("admin-image-url");
+    if (urlField) urlField.value = "";
     document.getElementById("admin-slug").value = "";
     form.classList.add("hidden");
     formTitle.textContent = t("admin.create");
+    document.getElementById("admin-shell")?.classList.remove("is-editing");
+  };
+
+  const renderStats = (items) => {
+    const published = items.filter((item) => item.status === "published").length;
+    const draft = items.filter((item) => item.status === "draft").length;
+    const unsynced = items.filter((item) => !bilingualSyncState(item.title, item.titleZh, item.body, item.bodyZh).ok).length;
+    const set = (id, value) => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = String(value);
+    };
+    set("admin-stat-total", items.length);
+    set("admin-stat-published", published);
+    set("admin-stat-draft", draft);
+    set("admin-stat-sync", unsynced);
   };
 
   const renderTable = () => {
     const items = getActiveNews();
+    renderStats(items);
     table.innerHTML = items.map((item) => {
+      const sync = bilingualSyncState(item.title, item.titleZh, item.body, item.bodyZh);
       return `<tr data-slug="${escapeHtml(item.slug)}">
         <td>${escapeHtml(item.order)}</td>
-        <td>${escapeHtml(item.status)}</td>
+        <td><span class="admin-pill admin-pill-${escapeHtml(item.status)}">${escapeHtml(t("admin." + item.status))}</span></td>
         <td>${escapeHtml(item.date || "")}${item.top ? ` <span class="tag">TOP</span>` : ""}</td>
-        <td><strong>EN</strong> ${escapeHtml(item.title)}<br><strong>中文</strong> ${escapeHtml(item.titleZh || "—")}</td>
-        <td>${bilingualSyncState(item.title, item.titleZh, item.body, item.bodyZh).ok ? t("admin.syncOk") : t("admin.syncNo")}</td>
+        <td>
+          ${item.images && item.images[0] ? `<img class="admin-table-thumb" src="${escapeHtml(item.images[0].src)}" alt="">` : ""}
+          <strong>EN</strong> ${escapeHtml(item.title)}<br><strong>中文</strong> ${escapeHtml(item.titleZh || "—")}
+          ${item.images && item.images.length ? `<br><span class="muted">${item.images.length} ${t("admin.imageCount")}</span>` : ""}
+        </td>
+        <td><span class="admin-pill ${sync.ok ? "admin-pill-sync" : "admin-pill-warn"}">${sync.ok ? t("admin.syncShort") : t("admin.syncNo")}</span></td>
         <td>${item.url ? `<a href="${escapeHtml(item.url)}" target="_blank" rel="noreferrer">${t("news.viewDetails")}</a>` : "—"}</td>
         <td class="admin-actions">
           <button class="btn btn-outline" type="button" data-edit="${escapeHtml(item.slug)}">${t("admin.update")}</button>
@@ -583,6 +702,7 @@ function bindAdminNews() {
 
   const openForm = (item) => {
     form.classList.remove("hidden");
+    document.getElementById("admin-shell")?.classList.add("is-editing");
     formTitle.textContent = item ? t("admin.update") : t("admin.create");
     document.getElementById("admin-slug").value = item?.slug || "";
     form.date.value = item?.date || "";
@@ -594,6 +714,8 @@ function bindAdminNews() {
     form.titleZh.value = item?.titleZh || "";
     form.bodyZh.value = item?.bodyZh || "";
     form.top.checked = !!item?.top;
+    draftImages = normalizeNewsImages(item?.images);
+    renderImageList();
     ["title", "body", "titleZh", "bodyZh"].forEach((name) => {
       form[name].dataset.filledBy = item ? "user" : "";
     });
@@ -609,6 +731,8 @@ function bindAdminNews() {
     document.getElementById("preview-title-zh").textContent = form.titleZh.value || t("admin.previewEmpty");
     document.getElementById("preview-body-en").textContent = form.body.value || t("admin.previewEmpty");
     document.getElementById("preview-body-zh").textContent = form.bodyZh.value || t("admin.previewEmpty");
+    const previewImages = document.getElementById("preview-images");
+    if (previewImages) previewImages.innerHTML = newsGalleryHTML(draftImages, "news-gallery") || `<p class="muted">${t("admin.imagesEmpty")}</p>`;
     const sync = bilingualSyncState(form.title.value, form.titleZh.value, form.body.value, form.bodyZh.value);
     const flag = document.getElementById("admin-sync");
     flag.classList.toggle("is-ok", sync.ok);
@@ -673,6 +797,64 @@ function bindAdminNews() {
     showStatus(sync.ok ? t("admin.syncOk") : (sync.reason === "bodies" ? t("admin.syncBodies") : t("admin.syncTitles")));
   });
 
+  const addDraftImages = async (files) => {
+    const incoming = Array.from(files || []);
+    if (!incoming.length) return;
+    const room = NEWS_IMAGE_MAX - draftImages.length;
+    if (room <= 0) {
+      showStatus(t("admin.imagesMax"));
+      return;
+    }
+    try {
+      const added = [];
+      for (const file of incoming.slice(0, room)) {
+        added.push(await compressImageFile(file));
+      }
+      draftImages = draftImages.concat(added);
+      renderImageList();
+      updateAdminPreview();
+      if (incoming.length > room) showStatus(t("admin.imagesMax"));
+    } catch {
+      showStatus(t("admin.imageFail"));
+    }
+  };
+
+  document.getElementById("admin-images")?.addEventListener("change", (event) => {
+    addDraftImages(event.target.files);
+    event.target.value = "";
+  });
+
+  document.getElementById("admin-image-url-add")?.addEventListener("click", () => {
+    const field = document.getElementById("admin-image-url");
+    const src = (field?.value || "").trim();
+    if (!src) return;
+    if (!isAllowedImageSrc(src) || src.startsWith("data:")) {
+      showStatus(t("admin.imageUrlFail"));
+      return;
+    }
+    if (draftImages.length >= NEWS_IMAGE_MAX) {
+      showStatus(t("admin.imagesMax"));
+      return;
+    }
+    draftImages.push({
+      id: `img-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      src,
+      name: src.split("/").pop() || src,
+      alt: ""
+    });
+    field.value = "";
+    renderImageList();
+    updateAdminPreview();
+  });
+
+  document.getElementById("admin-image-list")?.addEventListener("click", (event) => {
+    const id = event.target.closest("[data-remove-image]")?.getAttribute("data-remove-image");
+    if (!id) return;
+    draftImages = draftImages.filter((img) => img.id !== id);
+    renderImageList();
+    updateAdminPreview();
+  });
+
   document.getElementById("admin-new").addEventListener("click", () => openForm(null));
   document.getElementById("admin-cancel").addEventListener("click", closeForm);
   document.getElementById("admin-restore").addEventListener("click", () => {
@@ -692,7 +874,12 @@ function bindAdminNews() {
     }
     if (deleteSlug) {
       if (!confirm(t("admin.deleteConfirm"))) return;
-      saveActiveNews(getActiveNews().filter((n) => n.slug !== deleteSlug));
+      try {
+        saveActiveNews(getActiveNews().filter((n) => n.slug !== deleteSlug));
+      } catch {
+        showStatus(t("admin.imageQuota"));
+        return;
+      }
       if (document.getElementById("admin-slug").value === deleteSlug) closeForm();
       renderTable();
       showStatus(t("admin.deleted"));
@@ -714,7 +901,8 @@ function bindAdminNews() {
       title: (data.title || "").trim(),
       titleZh: (data.titleZh || "").trim(),
       body: (data.body || "").trim(),
-      bodyZh: (data.bodyZh || "").trim()
+      bodyZh: (data.bodyZh || "").trim(),
+      images: normalizeNewsImages(draftImages)
     };
     if (!item.title || !item.titleZh) {
       showStatus(t("admin.needTitles"));
@@ -731,7 +919,12 @@ function bindAdminNews() {
     const next = editing
       ? current.map((n) => (n.slug === editing ? { ...n, ...item } : n))
       : [item, ...current];
-    saveActiveNews(next);
+    try {
+      saveActiveNews(next);
+    } catch {
+      showStatus(t("admin.imageQuota"));
+      return;
+    }
     closeForm();
     renderTable();
     showStatus(t("admin.synced"));
