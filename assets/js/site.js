@@ -136,8 +136,11 @@ function getStoredNews() {
   }
 }
 
+let remoteNews = null;
+let supabaseStatus = "";
+
 function getActiveNews() {
-  const raw = getStoredNews() || NEWS;
+  const raw = remoteNews || getStoredNews() || NEWS;
   return sortNews(raw.map((item, index) => normalizeNewsItem(item, index)));
 }
 
@@ -145,21 +148,60 @@ function getPublishedNews() {
   return getActiveNews().filter((item) => item.status === "published");
 }
 
-function saveActiveNews(items) {
+async function loadNewsFromSupabase() {
+  if (typeof fetchRemoteNews !== "function") return getActiveNews();
+  try {
+    const rows = await fetchRemoteNews();
+    if (rows.length) {
+      remoteNews = sortNews(rows.map((item, index) => normalizeNewsItem(item, index)));
+      try {
+        localStorage.setItem(NEWS_STORE_KEY, JSON.stringify(remoteNews));
+      } catch {
+        /* ignore quota on cache */
+      }
+    }
+    supabaseStatus = "ok";
+  } catch (error) {
+    supabaseStatus = error.missingTable ? "missing" : "error";
+  }
+  return getActiveNews();
+}
+
+async function saveActiveNews(items) {
   const next = sortNews(items);
   try {
     localStorage.setItem(NEWS_STORE_KEY, JSON.stringify(next));
-    return next;
   } catch {
     const error = new Error("quota");
     error.code = "quota";
     throw error;
   }
+  remoteNews = next;
+  if (typeof syncNewsToSupabase === "function") {
+    try {
+      await syncNewsToSupabase(next);
+      supabaseStatus = "ok";
+    } catch (error) {
+      supabaseStatus = error.missingTable ? "missing" : "error";
+      error.localSaved = true;
+      throw error;
+    }
+  }
+  return next;
 }
 
-function restoreDefaultNews() {
+async function restoreDefaultNews() {
   localStorage.removeItem(NEWS_STORE_KEY);
-  return sortNews(NEWS);
+  remoteNews = sortNews(NEWS.map((item, index) => normalizeNewsItem(item, index)));
+  if (typeof syncNewsToSupabase === "function") {
+    try {
+      await syncNewsToSupabase(remoteNews);
+      supabaseStatus = "ok";
+    } catch (error) {
+      supabaseStatus = error.missingTable ? "missing" : "error";
+    }
+  }
+  return remoteNews;
 }
 
 function newsSlug(title, existing) {
@@ -858,15 +900,15 @@ function bindAdminNews() {
 
   document.getElementById("admin-new").addEventListener("click", () => openForm(null));
   document.getElementById("admin-cancel").addEventListener("click", closeForm);
-  document.getElementById("admin-restore").addEventListener("click", () => {
+  document.getElementById("admin-restore").addEventListener("click", async () => {
     if (!confirm(t("admin.restoreConfirm"))) return;
-    restoreDefaultNews();
+    await restoreDefaultNews();
     closeForm();
     renderTable();
-    showStatus(t("admin.restored"));
+    showStatus(supabaseStatus === "missing" ? t("admin.supabaseMissing") : t("admin.restored"));
   });
 
-  table.addEventListener("click", (event) => {
+  table.addEventListener("click", async (event) => {
     const editSlug = event.target.closest("[data-edit]")?.getAttribute("data-edit");
     const deleteSlug = event.target.closest("[data-delete]")?.getAttribute("data-delete");
     if (editSlug) {
@@ -876,9 +918,11 @@ function bindAdminNews() {
     if (deleteSlug) {
       if (!confirm(t("admin.deleteConfirm"))) return;
       try {
-        saveActiveNews(getActiveNews().filter((n) => n.slug !== deleteSlug));
-      } catch {
-        showStatus(t("admin.imageQuota"));
+        await saveActiveNews(getActiveNews().filter((n) => n.slug !== deleteSlug));
+      } catch (error) {
+        if (document.getElementById("admin-slug").value === deleteSlug) closeForm();
+        renderTable();
+        showStatus(error.code === "quota" ? t("admin.imageQuota") : (error.missingTable ? t("admin.supabaseMissing") : t("admin.supabaseError")));
         return;
       }
       if (document.getElementById("admin-slug").value === deleteSlug) closeForm();
@@ -887,7 +931,7 @@ function bindAdminNews() {
     }
   });
 
-  form.addEventListener("submit", (event) => {
+  form.addEventListener("submit", async (event) => {
     event.preventDefault();
     const data = Object.fromEntries(new FormData(form).entries());
     const current = getActiveNews();
@@ -913,9 +957,15 @@ function bindAdminNews() {
       ? current.map((n) => (n.slug === editing ? { ...n, ...item } : n))
       : [item, ...current];
     try {
-      saveActiveNews(next);
-    } catch {
-      showStatus(t("admin.imageQuota"));
+      await saveActiveNews(next);
+    } catch (error) {
+      if (error.code === "quota") {
+        showStatus(t("admin.imageQuota"));
+        return;
+      }
+      closeForm();
+      renderTable();
+      showStatus(error.missingTable ? t("admin.supabaseMissing") : t("admin.supabaseError"));
       return;
     }
     closeForm();
@@ -924,14 +974,17 @@ function bindAdminNews() {
   });
 
   renderTable();
+  if (supabaseStatus === "missing") showStatus(t("admin.supabaseMissing"));
+  else if (supabaseStatus === "error") showStatus(t("admin.supabaseError"));
 }
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
   const page = document.body.dataset.page;
   document.body.classList.toggle("menu-collapsed", isMenuCollapsed());
   mountChrome(page);
   applyI18n();
   bindNav();
+  await loadNewsFromSupabase();
   const liveNews = getPublishedNews();
   const newsHome = document.getElementById("home-news");
   if (newsHome) renderNewsList(newsHome, liveNews);
