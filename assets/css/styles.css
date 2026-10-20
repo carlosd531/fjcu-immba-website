@@ -905,9 +905,58 @@ body.menu-collapsed .navbar-inner {
 }
 
 .faculty-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.faculty-card {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 18px;
+  grid-template-columns: minmax(0, 1fr) 180px;
+  gap: 28px;
+  align-items: start;
+}
+
+.faculty-photo {
+  width: 180px;
+  height: 225px;
+  object-fit: cover;
+  object-position: top center;
+  border-radius: 12px;
+  background: #efeae2;
+  justify-self: end;
+}
+
+.faculty-photo-empty {
+  background: linear-gradient(180deg, #efeae2, #ddd6cb);
+}
+
+.faculty-body h3 {
+  margin: 0 0 12px;
+  font-size: 1.35rem;
+}
+
+.faculty-fields {
+  margin: 0;
+}
+
+.faculty-field {
+  display: grid;
+  grid-template-columns: 9.5rem 1fr;
+  gap: 10px;
+  padding: 7px 0;
+  border-top: 1px solid var(--line);
+  font-size: 0.92rem;
+}
+
+.faculty-field dt {
+  margin: 0;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.faculty-field dd {
+  margin: 0;
 }
 
 .faculty-card small {
@@ -1076,7 +1125,6 @@ input, select, textarea {
   }
   .stats,
   .grid-3,
-  .faculty-grid,
   .footer-grid,
   .grid-2 {
     grid-template-columns: 1fr 1fr;
@@ -1136,12 +1184,22 @@ input, select, textarea {
 @media (max-width: 640px) {
   .stats,
   .grid-3,
-  .faculty-grid,
   .footer-grid,
   .grid-2,
   .news-item,
-  .news-item.has-image {
+  .news-item.has-image,
+  .faculty-field {
     grid-template-columns: 1fr;
+  }
+
+  .faculty-card {
+    grid-template-columns: minmax(0, 1fr) 110px;
+    gap: 16px;
+  }
+
+  .faculty-photo {
+    width: 110px;
+    height: 138px;
   }
 
   .announce-grid {
@@ -1520,6 +1578,76 @@ body.is-admin .brand-logo .logo {
 
 .admin-preview-images {
   margin-bottom: 16px;
+}
+
+.admin-table .admin-fac-thumb {
+  width: 56px;
+  height: 72px;
+  object-fit: cover;
+  border-radius: 8px;
+  display: block;
+}
+
+.admin-order-btns {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.admin-order-btns .btn {
+  min-height: 30px;
+  padding: 2px 8px;
+  font-size: 0.75rem;
+}
+
+.admin-fac-photo-preview {
+  margin-top: 14px;
+}
+
+.admin-fac-photo-preview img {
+  width: 120px;
+  height: 148px;
+  object-fit: cover;
+  border-radius: 12px;
+  display: block;
+}
+
+.admin-fac-preview {
+  grid-template-columns: minmax(0, 1fr);
+  max-width: 720px;
+}
+
+.span-2 {
+  grid-column: 1 / -1;
+}
+
+.auth-panel {
+  max-width: 520px;
+}
+
+.auth-panel label {
+  display: block;
+  margin: 0 0 16px;
+}
+
+.auth-panel input {
+  width: 100%;
+}
+
+.admin-status.is-warn {
+  background: rgba(182, 138, 61, 0.18);
+  color: #6d4e16;
+}
+
+.admin-sign-out {
+  margin-top: 8px;
+  width: 100%;
+}
+
+.admin-pill-rejected {
+  background: rgba(182, 138, 61, 0.18);
+  color: #6d4e16;
 }
 
 @media (max-width: 900px) {

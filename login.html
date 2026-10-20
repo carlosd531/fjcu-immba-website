@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sign in | Fu Jen imMBA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/styles.css?v=ux27">
+</head>
+<body data-page="login.html">
+  <main id="main" class="admin-page">
+    <div class="admin-shell auth-shell">
+      <aside class="admin-sidebar">
+        <p class="admin-kicker" data-i18n="auth.authKicker">Authentication</p>
+        <h1 data-i18n="auth.login">Sign in</h1>
+        <p class="admin-side-lead" data-i18n="auth.loginLead">Enter your email and password to verify your identity.</p>
+        <nav class="admin-side-nav" aria-label="Account">
+          <a class="is-active" href="login.html" data-i18n="auth.login">Sign in</a>
+          <a href="register.html" data-i18n="auth.register">Register</a>
+          <a href="forgot-password.html" data-i18n="auth.forgot">Reset password</a>
+          <a href="index.html" data-i18n="admin.publicHome">Public homepage</a>
+        </nav>
+      </aside>
+      <div class="admin-content">
+        <p id="auth-status" class="admin-status hidden" role="status"></p>
+        <form id="login-form" class="panel auth-panel">
+          <h2 data-i18n="auth.login">Sign in</h2>
+          <label><span data-i18n="auth.email">Email</span> <input type="email" name="email" required autocomplete="username"></label>
+          <label><span data-i18n="auth.password">Password</span> <input type="password" name="password" required autocomplete="current-password"></label>
+          <p class="cta-row">
+            <button class="btn btn-navy" type="submit" data-i18n="auth.login">Sign in</button>
+            <a class="btn btn-outline" href="register.html" data-i18n="auth.register">Register</a>
+          </p>
+          <p><a href="forgot-password.html" data-i18n="auth.forgot">Forgot password?</a></p>
+        </form>
+      </div>
+    </div>
+  </main>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/js/data.js?v=ux27"></script>
+  <script src="assets/js/supabase.js?v=ux27"></script>
+  <script src="assets/js/auth.js?v=ux27"></script>
+  <script src="assets/js/i18n.js?v=ux27"></script>
+  <script src="assets/js/site.js?v=ux27"></script>
+</body>
+</html>

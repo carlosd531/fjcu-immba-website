@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pending approval | Fu Jen imMBA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/styles.css?v=ux27">
+</head>
+<body data-page="admin-waiting.html">
+  <main id="main" class="admin-page">
+    <div class="admin-shell auth-shell">
+      <aside class="admin-sidebar">
+        <p class="admin-kicker" data-i18n="auth.authzKicker">Authorization</p>
+        <h1 data-i18n="auth.waiting">Waiting for approval</h1>
+        <p class="admin-side-lead" id="admin-account-meta"></p>
+        <nav class="admin-side-nav" aria-label="Account">
+          <a href="index.html" data-i18n="admin.publicHome">Public homepage</a>
+          <button class="btn btn-outline" type="button" id="admin-sign-out" data-i18n="auth.signOut">Sign out</button>
+        </nav>
+      </aside>
+      <div class="admin-content">
+        <p id="auth-status" class="admin-status hidden" role="status"></p>
+        <div class="panel auth-panel">
+          <h2 data-i18n="auth.waiting">Waiting for approval</h2>
+          <p id="waiting-lead" data-i18n="auth.pending">You are registered and verified, but you cannot access the back office yet. A super admin must approve you.</p>
+        </div>
+      </div>
+    </div>
+  </main>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/js/data.js?v=ux27"></script>
+  <script src="assets/js/supabase.js?v=ux27"></script>
+  <script src="assets/js/auth.js?v=ux27"></script>
+  <script src="assets/js/i18n.js?v=ux27"></script>
+  <script src="assets/js/site.js?v=ux27"></script>
+</body>
+</html>

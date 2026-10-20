@@ -219,6 +219,169 @@ function newsSlug(title, existing) {
   return slug;
 }
 
+const FACULTY_STORE_KEY = "immbaAdminFaculty";
+
+function cloneFaculty(items) {
+  return JSON.parse(JSON.stringify(items || []));
+}
+
+function facultyCategory(value, title) {
+  if (value === "adjunct" || value === "full-time") return value;
+  return /part-time|adjunct|兼任/i.test(title || "") ? "adjunct" : "full-time";
+}
+
+function facultyId(name, existing) {
+  const base = String(name || "faculty")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "") || "faculty";
+  let id = base;
+  let n = 2;
+  const used = new Set((existing || []).map((item) => item.id));
+  while (used.has(id)) {
+    id = `${base}-${n}`;
+    n += 1;
+  }
+  return id;
+}
+
+function normalizeFacultyItem(f, index) {
+  const photo = f.photo && isAllowedImageSrc(f.photo) ? String(f.photo) : "";
+  return {
+    id: f.id || facultyId(f.name, []),
+    order: f.order === 0 || f.order ? Number(f.order) : index + 1,
+    status: f.status === "draft" ? "draft" : "published",
+    name: f.name || "",
+    nameZh: f.nameZh || "",
+    title: f.title || "",
+    titleZh: f.titleZh || "",
+    edu: f.edu || "",
+    eduZh: f.eduZh || "",
+    specs: f.specs || "",
+    specsZh: f.specsZh || "",
+    dept: f.dept || "",
+    deptZh: f.deptZh || "",
+    tel: f.tel || f.phone || "",
+    email: f.email || "",
+    website: f.website || "",
+    photo: photo || f.image_url || "",
+    category: facultyCategory(f.category, f.title)
+  };
+}
+
+function sortFaculty(items) {
+  return cloneFaculty(items).sort((a, b) => (Number(a.order) || 9999) - (Number(b.order) || 9999));
+}
+
+function reindexFaculty(items) {
+  return sortFaculty(items).map((item, index) => ({ ...item, order: index + 1 }));
+}
+
+function defaultFacultyList() {
+  const used = [];
+  return FACULTY.map((item, index) => {
+    const next = normalizeFacultyItem({ ...item, id: facultyId(item.name, used) }, index);
+    used.push(next);
+    return next;
+  });
+}
+
+function getStoredFaculty() {
+  try {
+    const raw = localStorage.getItem(FACULTY_STORE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+let remoteFaculty = null;
+let facultySupabaseStatus = "";
+
+function getActiveFaculty() {
+  const raw = remoteFaculty || getStoredFaculty() || defaultFacultyList();
+  return reindexFaculty(raw.map((item, index) => normalizeFacultyItem(item, index)));
+}
+
+function getPublishedFaculty() {
+  return getActiveFaculty().filter((item) => item.status === "published");
+}
+
+async function loadFacultyFromSupabase() {
+  if (typeof fetchRemoteFaculty !== "function") return getActiveFaculty();
+  try {
+    const rows = await fetchRemoteFaculty();
+    if (rows.length) {
+      remoteFaculty = reindexFaculty(rows.map((item, index) => normalizeFacultyItem(item, index)));
+      try {
+        localStorage.setItem(FACULTY_STORE_KEY, JSON.stringify(remoteFaculty));
+      } catch {
+        /* ignore quota on cache */
+      }
+    }
+    facultySupabaseStatus = "ok";
+  } catch (error) {
+    facultySupabaseStatus = error.missingTable ? "missing" : "error";
+  }
+  return getActiveFaculty();
+}
+
+async function saveActiveFaculty(items, options) {
+  const next = options?.keepArrayOrder
+    ? cloneFaculty(items).map((item, index) => ({ ...item, order: index + 1 }))
+    : reindexFaculty(items);
+  try {
+    localStorage.setItem(FACULTY_STORE_KEY, JSON.stringify(next));
+  } catch {
+    const error = new Error("quota");
+    error.code = "quota";
+    throw error;
+  }
+  remoteFaculty = next;
+  if (typeof syncFacultyToSupabase === "function") {
+    try {
+      await syncFacultyToSupabase(next);
+      facultySupabaseStatus = "ok";
+    } catch (error) {
+      facultySupabaseStatus = error.missingTable ? "missing" : "error";
+      error.localSaved = true;
+      throw error;
+    }
+  }
+  return next;
+}
+
+async function restoreDefaultFaculty() {
+  localStorage.removeItem(FACULTY_STORE_KEY);
+  remoteFaculty = defaultFacultyList();
+  if (typeof syncFacultyToSupabase === "function") {
+    try {
+      await syncFacultyToSupabase(remoteFaculty);
+      facultySupabaseStatus = "ok";
+    } catch (error) {
+      facultySupabaseStatus = error.missingTable ? "missing" : "error";
+    }
+  }
+  return remoteFaculty;
+}
+
+function isAdminPage(page) {
+  return [
+    "admin-news.html",
+    "admin-faculty.html",
+    "admin-users.html",
+    "admin-waiting.html",
+    "login.html",
+    "register.html",
+    "verify-email.html",
+    "forgot-password.html",
+    "reset-password.html",
+    "auth-callback.html"
+  ].includes(page);
+}
+
 const PAGE_HEROES = {
   "about.html": { img: 0, title: "about.h1", crumbs: "about.crumbs", eyebrow: "about.eyebrow" },
   "regulations.html": { img: 2, title: "reg.h1", crumbs: "reg.crumbs", eyebrow: "nav.regulations" },
@@ -234,6 +397,7 @@ const PAGE_HEROES = {
   "highlights.html": { img: 11, title: "hig.h1", crumbs: "hig.crumbs", eyebrow: "nav.highlights" },
   "news.html": { img: 0, title: "news.h1", crumbs: "news.crumbs", eyebrow: "news.eyebrow" },
   "admin-news.html": { img: 0, title: "admin.h1", crumbs: "admin.crumbs", eyebrow: "admin.eyebrow" },
+  "admin-faculty.html": { img: 6, title: "adminFac.h1", crumbs: "admin.crumbs", eyebrow: "admin.eyebrow" },
   "gallery.html": { img: 1, title: "gal.h1", crumbs: "gal.crumbs", eyebrow: "nav.gallery" },
   "contact.html": { img: 2, title: "con.h1", crumbs: "con.crumbs", eyebrow: "con.eyebrow" },
   "resources.html": { img: 3, title: "res.h1", crumbs: "res.crumbs", eyebrow: "footer.downloads" }
@@ -272,7 +436,7 @@ function headerHTML(active) {
         <div class="branding-header">
           <div class="wrap branding-inner">
             <div class="brand">
-              <a class="brand-logo" href="${withLang("admin-news.html")}" title="${t("admin.logoHint")}" aria-label="${t("admin.logoHint")}">
+              <a class="brand-logo" href="${withLang("login.html")}" title="${t("admin.logoHint")}" aria-label="${t("admin.logoHint")}">
                 <img class="logo" src="assets/img/fujen-immba-logo-lockup.jpg" alt="${t("admin.logoHint")}">
               </a>
               <a class="brand-text" href="${withLang("index.html")}">
@@ -351,7 +515,7 @@ function footerHTML() {
           <h3>${t("footer.contact")}</h3>
           <p>${isZh() ? "張小姐" : "Ms. Chang"}<br>+886-2-2905-2750<br><a href="mailto:imMBA@mail.fju.edu.tw">imMBA@mail.fju.edu.tw</a></p>
           <p><a href="resources.html?lang=${getLang()}">${t("footer.downloads")}</a></p>
-          <p><a href="admin-news.html?lang=${getLang()}">${t("admin.nav")}</a></p>
+          <p><a href="login.html?lang=${getLang()}">${t("auth.login")}</a></p>
         </div>
       </div>
       <div class="wrap copy">
@@ -364,7 +528,7 @@ function footerHTML() {
 
 function mountPageHero() {
   const page = document.body.dataset.page;
-  if (page === "admin-news.html") return;
+  if (isAdminPage(page)) return;
   const spec = PAGE_HEROES[page];
   const main = document.getElementById("main");
   if (!spec || !main) return;
@@ -375,7 +539,7 @@ function mountPageHero() {
       <img src="${img}" alt="${t(spec.title)}">
       <div class="section-hero-inner">
         <p class="crumbs">${t(spec.crumbs)}</p>
-        <div class="eyebrow">${t(spec.eyebrow)}</div>
+        ${page === "news.html" ? "" : `<div class="eyebrow">${t(spec.eyebrow)}</div>`}
         <h1>${t(spec.title)}</h1>
       </div>
     </section>`;
@@ -389,9 +553,9 @@ function mountChrome(active) {
     icon.href = "assets/img/fujen-immba-logo-mark.jpg";
     document.head.appendChild(icon);
   }
-  if (active === "admin-news.html") document.body.classList.add("is-admin");
+  if (isAdminPage(active)) document.body.classList.add("is-admin");
   document.body.insertAdjacentHTML("afterbegin", headerHTML(active));
-  if (active !== "admin-news.html") document.body.insertAdjacentHTML("beforeend", footerHTML());
+  if (!isAdminPage(active)) document.body.insertAdjacentHTML("beforeend", footerHTML());
   mountPageHero();
 }
 
@@ -414,25 +578,41 @@ function locNews(n) {
 }
 
 function locFaculty(f) {
-  if (!isZh()) return f;
-  const roles = [
-    ["Associate Professor & Chair, imMBA", "副教授兼國際經營管理碩士班主任"],
-    ["Associate Professor, Director of MS Program in Technology Management", "副教授兼科技管理碩士班主任"],
-    ["Associate Professor, Director of the Academic Exchange Center", "副教授兼學術交流中心主任"],
-    ["Part-time Associate Professor", "兼任副教授"],
-    ["Chair Professor", "講座教授"],
-    ["Associate Professor", "副教授"],
-    ["Assistant Professor", "助理教授"],
-    ["Professor", "教授"]
-  ];
-  let role = f.role;
-  for (const [en, zh] of roles) {
-    if (f.role.includes(en) || f.role === en) {
-      role = zh;
-      break;
-    }
+  const titles = {
+    "Associate Professor": "副教授",
+    "Chair Professor": "講座教授",
+    "Professor": "教授",
+    "Assistant Professor": "助理教授",
+    "Part-time Associate Professor": "兼任副教授"
+  };
+  const depts = {
+    "Chair, MBA Program in International Management (imMBA)": "國際經營管理碩士班 (imMBA) 主任",
+    "Director, MS Program in Technology Management": "科技管理碩士班主任",
+    "Director, Academic Exchange Center": "學術交流中心主任",
+    "College of Management, Fu Jen Catholic University": "輔仁大學管理學院"
+  };
+  if (!isZh()) {
+    return {
+      ...f,
+      name: f.name || f.nameZh,
+      title: f.title || f.titleZh,
+      edu: f.edu || f.eduZh,
+      specs: f.specs || f.specsZh,
+      dept: f.dept || f.deptZh,
+      role: [f.title || f.titleZh, f.dept || f.deptZh].filter(Boolean).join(", ")
+    };
   }
-  return { ...f, role };
+  const title = f.titleZh || titles[f.title] || f.title;
+  const dept = f.deptZh || depts[f.dept] || f.dept;
+  return {
+    ...f,
+    name: f.nameZh || f.name,
+    title,
+    edu: f.eduZh || f.edu,
+    specs: f.specsZh || f.specs,
+    dept,
+    role: [title, dept].filter(Boolean).join("，")
+  };
 }
 
 function newsLangSwitcherHTML() {
@@ -479,15 +659,40 @@ function renderNewsList(target, items, limit) {
   }).join("");
 }
 
-function renderFaculty(target) {
-  target.innerHTML = FACULTY.map(locFaculty).map((f) => `
+function facultyField(label, valueHtml) {
+  return `<div class="faculty-field"><dt>${escapeHtml(label)}</dt><dd>${valueHtml}</dd></div>`;
+}
+
+function facultyCardHTML(person) {
+  const f = locFaculty(person);
+  const website = f.website
+    ? `<a href="${escapeHtml(f.website)}" target="_blank" rel="noreferrer">${escapeHtml(f.website.replace(/^https?:\/\//, ""))}</a>`
+    : "—";
+  const email = f.email ? `<a href="mailto:${escapeHtml(f.email)}">${escapeHtml(f.email)}</a>` : "—";
+  const photo = f.photo
+    ? `<img class="faculty-photo" src="${escapeHtml(f.photo)}" alt="${escapeHtml(f.name)}">`
+    : `<div class="faculty-photo faculty-photo-empty" aria-hidden="true"></div>`;
+  return `
     <article class="card faculty-card">
-      <small>${f.role}</small>
-      <h3>${f.name}</h3>
-      <p>${f.edu}</p>
-      <p class="muted">${f.specs}</p>
-      <p><a href="mailto:${f.email}">${f.email}</a>${f.tel ? `<br>${f.tel}` : ""}</p>
-    </article>`).join("");
+      <div class="faculty-body">
+        <h3>${escapeHtml(f.name)}</h3>
+        <dl class="faculty-fields">
+          ${facultyField(t("fac.fieldName"), escapeHtml(f.name || "—"))}
+          ${facultyField(t("fac.fieldTitle"), escapeHtml(f.title || "—"))}
+          ${facultyField(t("fac.fieldEdu"), escapeHtml(f.edu || "—"))}
+          ${facultyField(t("fac.fieldResearch"), escapeHtml(f.specs || "—"))}
+          ${facultyField(t("fac.fieldDept"), escapeHtml(f.dept || "—"))}
+          ${facultyField(t("fac.fieldPhone"), escapeHtml(f.tel || "—"))}
+          ${facultyField(t("fac.fieldEmail"), email)}
+          ${facultyField(t("fac.fieldWeb"), website)}
+        </dl>
+      </div>
+      ${photo}
+    </article>`;
+}
+
+function renderFaculty(target) {
+  target.innerHTML = getPublishedFaculty().map(facultyCardHTML).join("");
 }
 
 function renderGallery(target) {
@@ -504,7 +709,7 @@ function runSearch(query) {
   const hits = [
     ...PAGES.filter((p) => ((isZh() ? (p.titleZh || p.title) : p.title) + p.text).toLowerCase().includes(q)).map((p) => ({ title: isZh() ? (p.titleZh || p.title) : p.title, href: withLang(p.url), kind: t("search.page") })),
     ...getPublishedNews().map(locNews).filter((n) => ((n.title || "") + (n.titleZh || "") + (n.body || "") + (n.bodyZh || "")).toLowerCase().includes(q)).map((n) => ({ title: n.title, href: n.href, kind: t("search.news") })),
-    ...FACULTY.filter((f) => (f.name + f.specs + f.role).toLowerCase().includes(q)).map((f) => ({ title: f.name, href: withLang("faculty.html"), kind: t("search.faculty") }))
+    ...getPublishedFaculty().map(locFaculty).filter((f) => (`${f.name} ${f.nameZh || ""} ${f.specs} ${f.title || ""} ${f.dept || ""}`).toLowerCase().includes(q)).map((f) => ({ title: f.name, href: withLang("faculty.html"), kind: t("search.faculty") }))
   ];
   box.innerHTML = hits.length
     ? hits.map((h) => `<div class="news-item"><div class="date">${h.kind}</div><div><a href="${h.href}"><strong>${h.title}</strong></a></div></div>`).join("")
@@ -549,7 +754,7 @@ function decorateLinks() {
       a.setAttribute("target", "_blank");
       a.setAttribute("rel", "noopener noreferrer");
     }
-    if (a.closest(".nav, .nav-tools, .notice-bar, .footer, .cta-row, .related-links, .source-ref, .news-lang-switch, .admin-side-nav, .admin-toolbar") || a.classList.contains("btn") || a.classList.contains("news-item") || a.querySelector(".link-hint")) return;
+    if (a.closest(".nav, .nav-tools, .notice-bar, .footer, .cta-row, .related-links, .source-ref, .news-lang-switch, .admin-side-nav, .admin-toolbar, .admin-table, .faculty-card, .auth-panel") || a.classList.contains("btn") || a.classList.contains("news-item") || a.querySelector(".link-hint")) return;
     if (a.querySelector("img") && [...a.childNodes].every((n) => n.nodeType !== Node.TEXT_NODE || !n.textContent.trim())) return;
     const hint = document.createElement("span");
     hint.className = `link-hint ${external ? "link-hint-out" : "link-hint-in"}`;
@@ -978,6 +1183,314 @@ function bindAdminNews() {
   else if (supabaseStatus === "error") showStatus(t("admin.supabaseError"));
 }
 
+function bindAdminFaculty() {
+  const form = document.getElementById("admin-faculty-form");
+  const table = document.querySelector("#admin-faculty-table tbody");
+  const status = document.getElementById("admin-fac-status");
+  const formTitle = document.getElementById("admin-fac-form-title");
+  if (!form || !table) return;
+
+  document.querySelectorAll(".admin-side-nav a[href], .admin-toolbar a[href]").forEach((a) => {
+    const href = a.getAttribute("href");
+    if (href && !href.startsWith("http")) a.setAttribute("href", withLang(href));
+  });
+
+  const showStatus = (message) => {
+    status.textContent = message;
+    status.classList.remove("hidden");
+  };
+
+  let draftPhoto = "";
+  const textFields = ["name", "nameZh", "title", "titleZh", "edu", "eduZh", "specs", "specsZh", "dept", "deptZh"];
+
+  const renderPhotoPreview = () => {
+    const box = document.getElementById("admin-fac-photo-preview");
+    if (!box) return;
+    box.innerHTML = draftPhoto
+      ? `<img src="${escapeHtml(draftPhoto)}" alt="">`
+      : `<p class="muted">${t("adminFac.photoEmpty")}</p>`;
+  };
+
+  const closeForm = () => {
+    form.reset();
+    draftPhoto = "";
+    renderPhotoPreview();
+    const picker = document.getElementById("admin-fac-photo-file");
+    if (picker) picker.value = "";
+    const urlField = document.getElementById("admin-fac-photo-url");
+    if (urlField) urlField.value = "";
+    document.getElementById("admin-fac-id").value = "";
+    form.classList.add("hidden");
+    formTitle.textContent = t("adminFac.create");
+    document.getElementById("admin-shell")?.classList.remove("is-editing");
+  };
+
+  const renderStats = (items) => {
+    const published = items.filter((item) => item.status === "published").length;
+    const draft = items.filter((item) => item.status === "draft").length;
+    const set = (id, value) => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = String(value);
+    };
+    set("admin-fac-stat-total", items.length);
+    set("admin-fac-stat-published", published);
+    set("admin-fac-stat-draft", draft);
+  };
+
+  const renderTable = () => {
+    const items = getActiveFaculty();
+    renderStats(items);
+    table.innerHTML = items.map((item, index) => `
+      <tr data-id="${escapeHtml(item.id)}">
+        <td>
+          ${escapeHtml(item.order)}
+          <div class="admin-order-btns">
+            <button class="btn btn-outline" type="button" data-move="-1" ${index === 0 ? "disabled" : ""}>${t("adminFac.moveUp")}</button>
+            <button class="btn btn-outline" type="button" data-move="1" ${index === items.length - 1 ? "disabled" : ""}>${t("adminFac.moveDown")}</button>
+          </div>
+        </td>
+        <td><span class="admin-pill admin-pill-${escapeHtml(item.status)}">${escapeHtml(t("admin." + item.status))}</span></td>
+        <td>${item.photo ? `<img class="admin-fac-thumb" src="${escapeHtml(item.photo)}" alt="">` : "—"}</td>
+        <td><strong>EN</strong> ${escapeHtml(item.name)}<br><strong>中文</strong> ${escapeHtml(item.nameZh || "—")}</td>
+        <td>${escapeHtml(item.title || "—")}</td>
+        <td>${escapeHtml(t(item.category === "adjunct" ? "adminFac.adjunct" : "adminFac.fullTime"))}</td>
+        <td>${item.email ? `<a href="mailto:${escapeHtml(item.email)}">${escapeHtml(item.email)}</a>` : "—"}</td>
+        <td class="admin-actions">
+          <button class="btn btn-outline" type="button" data-edit="${escapeHtml(item.id)}">${t("admin.update")}</button>
+          <button class="btn btn-outline" type="button" data-delete="${escapeHtml(item.id)}">${t("admin.delete")}</button>
+        </td>
+      </tr>`).join("");
+  };
+
+  const formItem = () => ({
+    id: document.getElementById("admin-fac-id").value || facultyId(form.name.value, getActiveFaculty()),
+    order: Number(form.order.value) || getActiveFaculty().length + 1,
+    status: form.status.value === "draft" ? "draft" : "published",
+    name: form.name.value.trim(),
+    nameZh: form.nameZh.value.trim(),
+    title: form.title.value.trim(),
+    titleZh: form.titleZh.value.trim(),
+    edu: form.edu.value.trim(),
+    eduZh: form.eduZh.value.trim(),
+    specs: form.specs.value.trim(),
+    specsZh: form.specsZh.value.trim(),
+    dept: form.dept.value.trim(),
+    deptZh: form.deptZh.value.trim(),
+    category: facultyCategory(form.category.value, form.title.value),
+    tel: form.tel.value.trim(),
+    email: form.email.value.trim(),
+    website: form.website.value.trim(),
+    photo: draftPhoto
+  });
+
+  const updatePreview = () => {
+    const box = document.getElementById("admin-fac-preview");
+    if (box) box.innerHTML = facultyCardHTML(formItem());
+  };
+
+  const openForm = (item) => {
+    form.classList.remove("hidden");
+    document.getElementById("admin-shell")?.classList.add("is-editing");
+    formTitle.textContent = item ? t("admin.update") : t("adminFac.create");
+    document.getElementById("admin-fac-id").value = item?.id || "";
+    form.order.value = item?.order || getActiveFaculty().length + 1;
+    form.status.value = item ? (item.status || "published") : "published";
+    form.category.value = item ? facultyCategory(item.category, item.title) : "full-time";
+    form.name.value = item?.name || "";
+    form.nameZh.value = item?.nameZh || "";
+    form.title.value = item?.title || "";
+    form.titleZh.value = item?.titleZh || "";
+    form.edu.value = item?.edu || "";
+    form.eduZh.value = item?.eduZh || "";
+    form.specs.value = item?.specs || "";
+    form.specsZh.value = item?.specsZh || "";
+    form.dept.value = item?.dept || "";
+    form.deptZh.value = item?.deptZh || "";
+    form.tel.value = item?.tel || "";
+    form.email.value = item?.email || "";
+    form.website.value = item?.website || "";
+    draftPhoto = item?.photo || "";
+    renderPhotoPreview();
+    textFields.forEach((name) => {
+      form[name].dataset.filledBy = item ? "user" : "";
+    });
+    updatePreview();
+    form.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  const fillTranslation = async (fromName, toName, langpair, force) => {
+    const source = form[fromName];
+    const target = form[toName];
+    const text = source.value.trim();
+    if (!text) return;
+    if (!force && target.value.trim() && target.dataset.filledBy === "user") return;
+    target.dataset.busy = "1";
+    try {
+      const result = await translateText(text, langpair);
+      if (result) {
+        target.value = result;
+        target.dataset.filledBy = "auto";
+        updatePreview();
+      }
+    } catch {
+      showStatus(t("admin.translateFail"));
+    } finally {
+      delete target.dataset.busy;
+    }
+  };
+
+  const translateTimers = {};
+  const scheduleAutoTranslate = (fromName, toName, langpair) => {
+    clearTimeout(translateTimers[fromName]);
+    translateTimers[fromName] = setTimeout(() => fillTranslation(fromName, toName, langpair, false), 700);
+  };
+
+  form.addEventListener("input", (event) => {
+    const field = event.target;
+    if (textFields.includes(field.name)) {
+      field.dataset.filledBy = "user";
+      const pair = field.dataset.pair;
+      const fromLang = field.dataset.lang;
+      if (pair && fromLang) {
+        const langpair = fromLang === "en" ? "en|zh-TW" : "zh-TW|en";
+        scheduleAutoTranslate(field.name, pair, langpair);
+      }
+    }
+    updatePreview();
+  });
+
+  form.querySelectorAll("[data-translate-from]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      fillTranslation(btn.dataset.translateFrom, btn.dataset.translateTo, btn.dataset.langpair, true);
+    });
+  });
+
+  document.getElementById("admin-fac-photo-file")?.addEventListener("change", async (event) => {
+    const file = event.target.files && event.target.files[0];
+    event.target.value = "";
+    if (!file) return;
+    try {
+      const img = await compressImageFile(file);
+      draftPhoto = img.src;
+      renderPhotoPreview();
+      updatePreview();
+    } catch {
+      showStatus(t("adminFac.photoFail"));
+    }
+  });
+
+  document.getElementById("admin-fac-photo-url-add")?.addEventListener("click", () => {
+    const field = document.getElementById("admin-fac-photo-url");
+    const src = (field?.value || "").trim();
+    if (!src) return;
+    if (!isAllowedImageSrc(src) || src.startsWith("data:")) {
+      showStatus(t("adminFac.photoFail"));
+      return;
+    }
+    draftPhoto = src;
+    field.value = "";
+    renderPhotoPreview();
+    updatePreview();
+  });
+
+  document.getElementById("admin-fac-photo-remove")?.addEventListener("click", () => {
+    draftPhoto = "";
+    renderPhotoPreview();
+    updatePreview();
+  });
+
+  document.getElementById("admin-fac-new").addEventListener("click", () => openForm(null));
+  document.getElementById("admin-fac-cancel").addEventListener("click", closeForm);
+  document.getElementById("admin-fac-restore").addEventListener("click", async () => {
+    if (!confirm(t("adminFac.restoreConfirm"))) return;
+    await restoreDefaultFaculty();
+    closeForm();
+    renderTable();
+    showStatus(facultySupabaseStatus === "missing" ? t("adminFac.supabaseMissing") : t("adminFac.restored"));
+  });
+
+  table.addEventListener("click", async (event) => {
+    const row = event.target.closest("tr[data-id]");
+    const id = row?.getAttribute("data-id");
+    if (!id) return;
+    const editId = event.target.closest("[data-edit]")?.getAttribute("data-edit");
+    const deleteId = event.target.closest("[data-delete]")?.getAttribute("data-delete");
+    const moveBtn = event.target.closest("[data-move]");
+    if (editId) {
+      const item = getActiveFaculty().find((n) => n.id === editId);
+      if (item) openForm(item);
+      return;
+    }
+    if (deleteId) {
+      if (!confirm(t("adminFac.deleteConfirm"))) return;
+      try {
+        await saveActiveFaculty(getActiveFaculty().filter((n) => n.id !== deleteId));
+      } catch (error) {
+        if (document.getElementById("admin-fac-id").value === deleteId) closeForm();
+        renderTable();
+        showStatus(error.code === "quota" ? t("admin.imageQuota") : (error.missingTable ? t("adminFac.supabaseMissing") : t("adminFac.deleted")));
+        return;
+      }
+      if (document.getElementById("admin-fac-id").value === deleteId) closeForm();
+      renderTable();
+      showStatus(t("adminFac.deleted"));
+      return;
+    }
+    if (moveBtn) {
+      const dir = Number(moveBtn.getAttribute("data-move"));
+      const items = getActiveFaculty();
+      const i = items.findIndex((n) => n.id === id);
+      const j = i + dir;
+      if (i < 0 || j < 0 || j >= items.length) return;
+      const next = items.slice();
+      [next[i], next[j]] = [next[j], next[i]];
+      try {
+        await saveActiveFaculty(next, { keepArrayOrder: true });
+      } catch (error) {
+        showStatus(error.code === "quota" ? t("admin.imageQuota") : (error.missingTable ? t("adminFac.supabaseMissing") : t("adminFac.reordered")));
+        return;
+      }
+      renderTable();
+      showStatus(t("adminFac.reordered"));
+    }
+  });
+
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const current = getActiveFaculty();
+    const editing = document.getElementById("admin-fac-id").value;
+    const item = formItem();
+    if (editing) item.id = editing;
+    else item.id = facultyId(item.name || item.nameZh, current);
+    if (!item.name || !item.nameZh) {
+      showStatus(t("adminFac.needNames"));
+      return;
+    }
+    const next = editing
+      ? current.map((n) => (n.id === editing ? { ...n, ...item } : n))
+      : [...current, item];
+    try {
+      await saveActiveFaculty(next);
+    } catch (error) {
+      if (error.code === "quota") {
+        showStatus(t("admin.imageQuota"));
+        return;
+      }
+      closeForm();
+      renderTable();
+      showStatus(error.missingTable ? t("adminFac.supabaseMissing") : t("adminFac.supabaseError"));
+      return;
+    }
+    closeForm();
+    renderTable();
+    showStatus(item.status === "published" ? t("adminFac.posted") : t("adminFac.draftSaved"));
+  });
+
+  renderTable();
+  if (facultySupabaseStatus === "missing") showStatus(t("adminFac.supabaseMissing"));
+  else if (facultySupabaseStatus === "error") showStatus(t("adminFac.supabaseError"));
+}
+
 document.addEventListener("DOMContentLoaded", async () => {
   const page = document.body.dataset.page;
   document.body.classList.toggle("menu-collapsed", isMenuCollapsed());
@@ -985,6 +1498,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   applyI18n();
   bindNav();
   await loadNewsFromSupabase();
+  await loadFacultyFromSupabase();
   const liveNews = getPublishedNews();
   const newsHome = document.getElementById("home-news");
   if (newsHome) renderNewsList(newsHome, liveNews);
@@ -998,7 +1512,22 @@ document.addEventListener("DOMContentLoaded", async () => {
   const highlights = document.getElementById("highlights-news");
   if (highlights) renderNewsList(highlights, liveNews.filter((n) => n.tag !== "Office"));
   bindNewsLangSwitch();
-  if (page === "admin-news.html") bindAdminNews();
+  if (typeof bindAuthPages === "function") bindAuthPages();
+  if (page === "admin-news.html" || page === "admin-faculty.html") {
+    if (typeof guardBackOffice !== "function") {
+      window.location.href = "login.html";
+      return;
+    }
+    const gate = await guardBackOffice({ content: true });
+    if (!gate) return;
+    if (page === "admin-news.html") bindAdminNews();
+    if (page === "admin-faculty.html") bindAdminFaculty();
+  }
+  if (page === "admin-users.html") {
+    const gate = typeof guardBackOffice === "function" ? await guardBackOffice({ superAdmin: true }) : null;
+    if (!gate) return;
+    if (typeof bindAdminUsers === "function") await bindAdminUsers();
+  }
   const form = document.getElementById("contact-form");
   if (form) {
     form.addEventListener("submit", (e) => {

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Administrators | Fu Jen imMBA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/styles.css?v=ux27">
+</head>
+<body data-page="admin-users.html">
+  <main id="main" class="admin-page">
+    <div class="admin-shell" id="admin-shell">
+      <aside class="admin-sidebar">
+        <p class="admin-kicker" data-i18n="auth.authzKicker">Authorization</p>
+        <h1 data-i18n="auth.users">Administrators</h1>
+        <p class="admin-side-lead" data-i18n="auth.usersLead">Approve or reject people who registered. Only a super admin can do this.</p>
+        <p id="admin-account-meta" class="admin-side-lead"></p>
+        <nav class="admin-side-nav" aria-label="Admin">
+          <a href="admin-news.html" data-i18n="admin.module">Announcements</a>
+          <a href="admin-faculty.html" data-i18n="adminFac.module">Faculty</a>
+          <a class="is-active" href="admin-users.html" data-i18n="auth.users">Administrators</a>
+          <a href="index.html" data-i18n="admin.publicHome">Public homepage</a>
+        </nav>
+      </aside>
+      <div class="admin-content">
+        <p class="muted admin-lead" data-i18n="auth.usersHelp">pending = verified but no back office. admin = may edit announcements and faculty. super_admin = may also approve or reject administrators.</p>
+        <p id="auth-status" class="admin-status hidden" role="status"></p>
+        <div class="panel admin-table-wrap">
+          <div class="table-scroll">
+            <table class="admin-table" id="admin-users-table">
+              <thead>
+                <tr>
+                  <th data-i18n="auth.email">Email</th>
+                  <th data-i18n="auth.roleLabel">Role</th>
+                  <th data-i18n="auth.registered">Registered</th>
+                  <th data-i18n="admin.colActions">Actions</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/js/data.js?v=ux27"></script>
+  <script src="assets/js/supabase.js?v=ux27"></script>
+  <script src="assets/js/auth.js?v=ux27"></script>
+  <script src="assets/js/i18n.js?v=ux27"></script>
+  <script src="assets/js/site.js?v=ux27"></script>
+</body>
+</html>

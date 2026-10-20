@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AdminFaculty | Fu Jen imMBA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/styles.css?v=ux27">
+</head>
+<body data-page="admin-faculty.html">
+  <main id="main" class="admin-page">
+    <div class="admin-shell" id="admin-shell">
+      <aside class="admin-sidebar">
+        <p class="admin-kicker" data-i18n="admin.eyebrow">Back office</p>
+        <h1 data-i18n="adminFac.h1">AdminFaculty</h1>
+        <p class="admin-side-lead" data-i18n="adminFac.workspace">Manage bilingual faculty profiles as one record.</p>
+        <nav class="admin-side-nav" aria-label="AdminFaculty">
+          <a href="admin-news.html" data-i18n="admin.module">Announcements</a>
+          <a class="is-active" href="admin-faculty.html" data-i18n="adminFac.module">Faculty</a>
+          <a href="faculty.html" data-i18n="adminFac.viewFront">View the current faculty list</a>
+          <a href="index.html" data-i18n="admin.publicHome">Public homepage</a>
+        </nav>
+      </aside>
+
+      <div class="admin-content">
+        <header class="admin-toolbar">
+          <div>
+            <p class="admin-kicker" data-i18n="admin.eyebrow">Back office</p>
+            <h2 data-i18n="adminFac.list">Current faculty list</h2>
+          </div>
+          <p class="cta-row admin-toolbar-actions">
+            <button class="btn btn-gold" type="button" id="admin-fac-new" data-i18n="adminFac.create">Add a faculty member</button>
+            <button class="btn btn-outline" type="button" id="admin-fac-restore" data-i18n="adminFac.restore">Restore the default faculty list</button>
+            <a class="btn btn-navy" href="faculty.html" data-i18n="adminFac.viewFront">View the current faculty list</a>
+          </p>
+        </header>
+
+        <p class="muted admin-lead" data-i18n="adminFac.lead">Each person is one record: photo, phone, email, website, and display order, plus Chinese and English name, title, education, research fields, and department. Use Move up / Move down to reorder the public Faculty page.</p>
+
+        <div class="admin-stats" aria-label="Faculty counts">
+          <article class="admin-stat">
+            <span data-i18n="admin.statTotal">Total records</span>
+            <strong id="admin-fac-stat-total">0</strong>
+          </article>
+          <article class="admin-stat">
+            <span data-i18n="admin.published">Published</span>
+            <strong id="admin-fac-stat-published">0</strong>
+          </article>
+          <article class="admin-stat">
+            <span data-i18n="admin.draft">Draft</span>
+            <strong id="admin-fac-stat-draft">0</strong>
+          </article>
+        </div>
+
+        <p id="admin-fac-status" class="admin-status hidden" role="status"></p>
+
+        <form id="admin-faculty-form" class="panel admin-editor hidden">
+          <input type="hidden" name="id" id="admin-fac-id">
+          <h3 id="admin-fac-form-title" data-i18n="adminFac.create">Add a faculty member</h3>
+
+          <fieldset class="admin-fieldset">
+            <legend data-i18n="admin.shared">Shared fields</legend>
+            <div class="grid-2">
+              <label><span data-i18n="admin.order">Display order</span> <input type="number" name="order" min="1" step="1" required></label>
+              <label><span data-i18n="admin.status">Status</span>
+                <select name="status">
+                  <option value="published" data-i18n="admin.published">Published</option>
+                  <option value="draft" data-i18n="admin.draft">Draft</option>
+                </select>
+              </label>
+              <label><span data-i18n="adminFac.category">Category</span>
+                <select name="category">
+                  <option value="full-time" data-i18n="adminFac.fullTime">Full-time</option>
+                  <option value="adjunct" data-i18n="adminFac.adjunct">Adjunct</option>
+                </select>
+              </label>
+              <label><span data-i18n="fac.fieldPhone">Phone</span> <input type="text" name="tel"></label>
+              <label><span data-i18n="fac.fieldEmail">Email</span> <input type="email" name="email"></label>
+              <label class="span-2"><span data-i18n="fac.fieldWeb">Personal website</span> <input type="url" name="website" placeholder="https://"></label>
+            </div>
+          </fieldset>
+
+          <fieldset class="admin-fieldset">
+            <legend data-i18n="adminFac.photo">Faculty photo</legend>
+            <p class="muted" data-i18n="adminFac.photoHelp">Upload a photo or paste an image URL. It appears on the public Faculty page.</p>
+            <p class="cta-row">
+              <label class="btn btn-outline admin-file-btn">
+                <span data-i18n="adminFac.photoAdd">Attach photo</span>
+                <input type="file" id="admin-fac-photo-file" accept="image/png,image/jpeg,image/webp,image/gif">
+              </label>
+              <button class="btn btn-outline" type="button" id="admin-fac-photo-remove" data-i18n="admin.imageRemove">Remove</button>
+            </p>
+            <label><span data-i18n="admin.imageUrl">Or add an image URL</span>
+              <span class="admin-url-row">
+                <input type="url" id="admin-fac-photo-url" placeholder="https://">
+                <button class="btn btn-outline" type="button" id="admin-fac-photo-url-add" data-i18n="admin.imageUrlAdd">Add URL</button>
+              </span>
+            </label>
+            <div id="admin-fac-photo-preview" class="admin-fac-photo-preview"></div>
+          </fieldset>
+
+          <p class="muted" data-i18n="adminFac.bilingualHelp">Create both languages together. The other language is filled by automatic translation and you can edit it. Saving or deleting applies to one record.</p>
+          <div class="grid-2">
+            <fieldset class="admin-fieldset">
+              <legend data-i18n="admin.enFields">English</legend>
+              <label><span data-i18n="adminFac.name">English name</span> <input type="text" name="name" data-lang="en" data-pair="nameZh" required></label>
+              <p class="cta-row"><button class="btn btn-outline" type="button" data-translate-from="name" data-translate-to="nameZh" data-langpair="en|zh-TW" data-i18n="admin.translateZh">Auto-translate to Chinese</button></p>
+              <label><span data-i18n="adminFac.title">English title</span> <input type="text" name="title" data-lang="en" data-pair="titleZh"></label>
+              <p class="cta-row"><button class="btn btn-outline" type="button" data-translate-from="title" data-translate-to="titleZh" data-langpair="en|zh-TW" data-i18n="admin.translateZh">Auto-translate to Chinese</button></p>
+              <label><span data-i18n="adminFac.edu">English education</span> <textarea name="edu" rows="3" data-lang="en" data-pair="eduZh"></textarea></label>
+              <p class="cta-row"><button class="btn btn-outline" type="button" data-translate-from="edu" data-translate-to="eduZh" data-langpair="en|zh-TW" data-i18n="admin.translateZh">Auto-translate to Chinese</button></p>
+              <label><span data-i18n="adminFac.research">English research fields</span> <textarea name="specs" rows="3" data-lang="en" data-pair="specsZh"></textarea></label>
+              <p class="cta-row"><button class="btn btn-outline" type="button" data-translate-from="specs" data-translate-to="specsZh" data-langpair="en|zh-TW" data-i18n="admin.translateZh">Auto-translate to Chinese</button></p>
+              <label><span data-i18n="adminFac.dept">English department / position</span> <textarea name="dept" rows="2" data-lang="en" data-pair="deptZh"></textarea></label>
+              <p class="cta-row"><button class="btn btn-outline" type="button" data-translate-from="dept" data-translate-to="deptZh" data-langpair="en|zh-TW" data-i18n="admin.translateZh">Auto-translate to Chinese</button></p>
+            </fieldset>
+            <fieldset class="admin-fieldset">
+              <legend data-i18n="admin.zhFields">Chinese</legend>
+              <label><span data-i18n="adminFac.nameZh">Chinese name</span> <input type="text" name="nameZh" data-lang="zh" data-pair="name" required></label>
+              <p class="cta-row"><button class="btn btn-outline" type="button" data-translate-from="nameZh" data-translate-to="name" data-langpair="zh-TW|en" data-i18n="admin.translateEn">Auto-translate to English</button></p>
+              <label><span data-i18n="adminFac.titleZh">Chinese title</span> <input type="text" name="titleZh" data-lang="zh" data-pair="title"></label>
+              <p class="cta-row"><button class="btn btn-outline" type="button" data-translate-from="titleZh" data-translate-to="title" data-langpair="zh-TW|en" data-i18n="admin.translateEn">Auto-translate to English</button></p>
+              <label><span data-i18n="adminFac.eduZh">Chinese education</span> <textarea name="eduZh" rows="3" data-lang="zh" data-pair="edu"></textarea></label>
+              <p class="cta-row"><button class="btn btn-outline" type="button" data-translate-from="eduZh" data-translate-to="edu" data-langpair="zh-TW|en" data-i18n="admin.translateEn">Auto-translate to English</button></p>
+              <label><span data-i18n="adminFac.researchZh">Chinese research fields</span> <textarea name="specsZh" rows="3" data-lang="zh" data-pair="specs"></textarea></label>
+              <p class="cta-row"><button class="btn btn-outline" type="button" data-translate-from="specsZh" data-translate-to="specs" data-langpair="zh-TW|en" data-i18n="admin.translateEn">Auto-translate to English</button></p>
+              <label><span data-i18n="adminFac.deptZh">Chinese department / position</span> <textarea name="deptZh" rows="2" data-lang="zh" data-pair="dept"></textarea></label>
+              <p class="cta-row"><button class="btn btn-outline" type="button" data-translate-from="deptZh" data-translate-to="dept" data-langpair="zh-TW|en" data-i18n="admin.translateEn">Auto-translate to English</button></p>
+            </fieldset>
+          </div>
+
+          <fieldset class="admin-fieldset">
+            <legend data-i18n="admin.preview">Read / Preview</legend>
+            <div id="admin-fac-preview" class="faculty-grid admin-fac-preview"></div>
+          </fieldset>
+
+          <p class="cta-row">
+            <button class="btn btn-navy" type="submit" id="admin-fac-save" data-i18n="adminFac.save">Save both versions as one faculty member</button>
+            <button class="btn btn-outline" type="button" id="admin-fac-cancel" data-i18n="admin.cancel">Cancel</button>
+          </p>
+        </form>
+
+        <div class="panel admin-table-wrap">
+          <p class="muted" data-i18n="adminFac.listHelp">Each row is one bilingual record. Draft items stay in this list and do not appear on the public Faculty page. Reorder with Move up / Move down.</p>
+          <div class="table-scroll">
+            <table class="admin-table" id="admin-faculty-table">
+              <thead>
+                <tr>
+                  <th data-i18n="admin.colOrder">Order</th>
+                  <th data-i18n="admin.colStatus">Status</th>
+                  <th data-i18n="adminFac.colPhoto">Photo</th>
+                  <th data-i18n="adminFac.colName">Name</th>
+                  <th data-i18n="fac.fieldTitle">Title</th>
+                  <th data-i18n="adminFac.category">Category</th>
+                  <th data-i18n="fac.fieldEmail">Email</th>
+                  <th data-i18n="admin.colActions">Actions</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/js/data.js?v=ux27"></script>
+  <script src="assets/js/supabase.js?v=ux27"></script>
+  <script src="assets/js/auth.js?v=ux27"></script>
+  <script src="assets/js/i18n.js?v=ux27"></script>
+  <script src="assets/js/site.js?v=ux27"></script>
+</body>
+</html>
