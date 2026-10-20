@@ -118,11 +118,10 @@ function compressImageFile(file) {
 
 function sortNews(items) {
   return cloneNews(items).sort((a, b) => {
-    const orderA = Number(a.order) || 9999;
-    const orderB = Number(b.order) || 9999;
-    if (orderA !== orderB) return orderA - orderB;
+    const dateCmp = String(b.date || "").localeCompare(String(a.date || ""));
+    if (dateCmp) return dateCmp;
     if (!!a.top !== !!b.top) return a.top ? -1 : 1;
-    return String(b.date || "").localeCompare(String(a.date || ""));
+    return (Number(a.order) || 9999) - (Number(b.order) || 9999);
   });
 }
 
@@ -705,10 +704,12 @@ function bindAdminNews() {
     document.getElementById("admin-shell")?.classList.add("is-editing");
     formTitle.textContent = item ? t("admin.update") : t("admin.create");
     document.getElementById("admin-slug").value = item?.slug || "";
-    form.date.value = item?.date || "";
+    const today = new Date();
+    const todayIso = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+    form.date.value = item?.date || todayIso;
     form.url.value = item?.url || "";
     form.order.value = item?.order || getActiveNews().length + 1;
-    form.status.value = item ? (item.status || "published") : "draft";
+    form.status.value = item ? (item.status || "published") : "published";
     form.title.value = item?.title || "";
     form.body.value = item?.body || "";
     form.titleZh.value = item?.titleZh || "";
@@ -908,14 +909,6 @@ function bindAdminNews() {
       showStatus(t("admin.needTitles"));
       return;
     }
-    const sync = bilingualSyncState(item.title, item.titleZh, item.body, item.bodyZh);
-    if (item.status === "published" && !sync.ok) {
-      showStatus(t("admin.publishBlocked"));
-      form.status.value = "draft";
-      item.status = "draft";
-      updateAdminPreview();
-      return;
-    }
     const next = editing
       ? current.map((n) => (n.slug === editing ? { ...n, ...item } : n))
       : [item, ...current];
@@ -927,7 +920,7 @@ function bindAdminNews() {
     }
     closeForm();
     renderTable();
-    showStatus(t("admin.synced"));
+    showStatus(item.status === "published" ? t("admin.posted") : t("admin.draftSaved"));
   });
 
   renderTable();
