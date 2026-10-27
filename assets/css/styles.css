@@ -1244,6 +1244,10 @@ input, select, textarea {
   overflow-x: auto;
 }
 
+#alumni-table {
+  min-width: 1180px;
+}
+
 .admin-table {
   width: 100%;
   border-collapse: collapse;
@@ -1648,6 +1652,82 @@ body.is-admin .brand-logo .logo {
 .admin-pill-rejected {
   background: rgba(182, 138, 61, 0.18);
   color: #6d4e16;
+}
+
+.alumni-import-btn {
+  display: inline-flex;
+  cursor: pointer;
+}
+
+.alumni-table-tools {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
+.alumni-col-menu {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 10px;
+  width: 100%;
+}
+
+.alumni-col-panel {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  width: 100%;
+  padding: 8px 0 0;
+}
+
+.alumni-col-panel.hidden {
+  display: none;
+}
+
+.alumni-col-check {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.alumni-import-issues {
+  margin: 0 0 16px;
+  padding-left: 1.2rem;
+}
+
+.alumni-import-issues .is-warn {
+  color: #6d4e16;
+}
+
+.alumni-tools,
+.alumni-audit {
+  margin: 0 0 20px;
+}
+
+.alumni-filters {
+  margin: 0 0 12px;
+}
+
+.pending-admin-list {
+  display: grid;
+  gap: 14px;
+  margin-top: 14px;
+}
+
+.pending-admin-card {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 16px 18px;
+  background: #fff;
+}
+
+.pending-admin-card h3 {
+  margin: 0 0 6px;
+  font-size: 1.15rem;
+}
+
+.pending-admin-card p {
+  margin: 0 0 8px;
 }
 
 @media (max-width: 900px) {

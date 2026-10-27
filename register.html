@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/styles.css?v=ux27">
+  <link rel="stylesheet" href="assets/css/styles.css?v=ux29">
 </head>
 <body data-page="register.html">
   <main id="main" class="admin-page">
@@ -27,6 +27,7 @@
         <p id="auth-status" class="admin-status hidden" role="status"></p>
         <form id="register-form" class="panel auth-panel">
           <h2 data-i18n="auth.register">Register</h2>
+          <label><span data-i18n="auth.fullName">Name</span> <input type="text" name="full_name" required autocomplete="name"></label>
           <label><span data-i18n="auth.email">Email</span> <input type="email" name="email" required autocomplete="username"></label>
           <label><span data-i18n="auth.password">Password</span> <input type="password" name="password" required minlength="8" autocomplete="new-password"></label>
           <label><span data-i18n="auth.confirm">Confirm password</span> <input type="password" name="confirm" required minlength="8" autocomplete="new-password"></label>
@@ -39,10 +40,10 @@
     </div>
   </main>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="assets/js/data.js?v=ux27"></script>
-  <script src="assets/js/supabase.js?v=ux27"></script>
-  <script src="assets/js/auth.js?v=ux27"></script>
-  <script src="assets/js/i18n.js?v=ux27"></script>
-  <script src="assets/js/site.js?v=ux27"></script>
+  <script src="assets/js/data.js?v=ux29"></script>
+  <script src="assets/js/supabase.js?v=ux29"></script>
+  <script src="assets/js/auth.js?v=ux29"></script>
+  <script src="assets/js/i18n.js?v=ux29"></script>
+  <script src="assets/js/site.js?v=ux29"></script>
 </body>
 </html>

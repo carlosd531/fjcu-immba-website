@@ -3,21 +3,22 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Administrators | Fu Jen imMBA</title>
+  <title>Administrator approval | Fu Jen imMBA</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/styles.css?v=ux27">
+  <link rel="stylesheet" href="assets/css/styles.css?v=ux29">
 </head>
 <body data-page="admin-users.html">
   <main id="main" class="admin-page">
     <div class="admin-shell" id="admin-shell">
       <aside class="admin-sidebar">
         <p class="admin-kicker" data-i18n="auth.authzKicker">Authorization</p>
-        <h1 data-i18n="auth.users">Administrators</h1>
+        <h1 data-i18n="auth.dashTitle">Administrator approval</h1>
         <p class="admin-side-lead" data-i18n="auth.usersLead">Approve or reject people who registered. Only a super admin can do this.</p>
         <p id="admin-account-meta" class="admin-side-lead"></p>
         <nav class="admin-side-nav" aria-label="Admin">
+          <a href="admin-alumni.html" data-i18n="alumni.module">Alumni</a>
           <a href="admin-news.html" data-i18n="admin.module">Announcements</a>
           <a href="admin-faculty.html" data-i18n="adminFac.module">Faculty</a>
           <a class="is-active" href="admin-users.html" data-i18n="auth.users">Administrators</a>
@@ -25,16 +26,42 @@
         </nav>
       </aside>
       <div class="admin-content">
-        <p class="muted admin-lead" data-i18n="auth.usersHelp">pending = verified but no back office. admin = may edit announcements and faculty. super_admin = may also approve or reject administrators.</p>
+        <p class="muted admin-lead" data-i18n="auth.flow">Register → Verify email → pending → Approval → admin</p>
+        <p class="muted admin-lead" data-i18n="auth.usersHelp">pending = verified but no back office. admin = may edit announcements, faculty, and alumni. super_admin = may also approve or reject administrators.</p>
         <p id="auth-status" class="admin-status hidden" role="status"></p>
+
+        <div class="admin-stats" aria-label="Administrator counts">
+          <article class="admin-stat">
+            <span data-i18n="auth.statPending">Pending</span>
+            <strong id="admin-user-stat-pending">0</strong>
+          </article>
+          <article class="admin-stat">
+            <span data-i18n="auth.statAdmin">Admins</span>
+            <strong id="admin-user-stat-admin">0</strong>
+          </article>
+          <article class="admin-stat">
+            <span data-i18n="auth.statRejected">Rejected</span>
+            <strong id="admin-user-stat-rejected">0</strong>
+          </article>
+        </div>
+
+        <section class="panel">
+          <h2 data-i18n="auth.pendingTitle">Pending administrator requests</h2>
+          <p class="muted" data-i18n="auth.pendingHelp">New administrators create an account, verify email, then wait here with role pending until you approve or reject them. Confirm the same row in Supabase Table Editor → profiles.</p>
+          <div id="pending-admin-list" class="pending-admin-list"></div>
+        </section>
+
         <div class="panel admin-table-wrap">
+          <h2 data-i18n="auth.allApps">All applications</h2>
           <div class="table-scroll">
             <table class="admin-table" id="admin-users-table">
               <thead>
                 <tr>
+                  <th data-i18n="auth.fullName">Name</th>
                   <th data-i18n="auth.email">Email</th>
-                  <th data-i18n="auth.roleLabel">Role</th>
+                  <th data-i18n="auth.status">Status</th>
                   <th data-i18n="auth.registered">Registered</th>
+                  <th data-i18n="auth.reviewed">Reviewed</th>
                   <th data-i18n="admin.colActions">Actions</th>
                 </tr>
               </thead>
@@ -46,10 +73,10 @@
     </div>
   </main>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="assets/js/data.js?v=ux27"></script>
-  <script src="assets/js/supabase.js?v=ux27"></script>
-  <script src="assets/js/auth.js?v=ux27"></script>
-  <script src="assets/js/i18n.js?v=ux27"></script>
-  <script src="assets/js/site.js?v=ux27"></script>
+  <script src="assets/js/data.js?v=ux29"></script>
+  <script src="assets/js/supabase.js?v=ux29"></script>
+  <script src="assets/js/auth.js?v=ux29"></script>
+  <script src="assets/js/i18n.js?v=ux29"></script>
+  <script src="assets/js/site.js?v=ux29"></script>
 </body>
 </html>

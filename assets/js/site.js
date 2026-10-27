@@ -371,6 +371,7 @@ function isAdminPage(page) {
   return [
     "admin-news.html",
     "admin-faculty.html",
+    "admin-alumni.html",
     "admin-users.html",
     "admin-waiting.html",
     "login.html",
@@ -1513,7 +1514,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (highlights) renderNewsList(highlights, liveNews.filter((n) => n.tag !== "Office"));
   bindNewsLangSwitch();
   if (typeof bindAuthPages === "function") bindAuthPages();
-  if (page === "admin-news.html" || page === "admin-faculty.html") {
+  if (page === "admin-news.html" || page === "admin-faculty.html" || page === "admin-alumni.html") {
     if (typeof guardBackOffice !== "function") {
       window.location.href = "login.html";
       return;
@@ -1522,6 +1523,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (!gate) return;
     if (page === "admin-news.html") bindAdminNews();
     if (page === "admin-faculty.html") bindAdminFaculty();
+    if (page === "admin-alumni.html" && typeof bindAdminAlumni === "function") await bindAdminAlumni();
   }
   if (page === "admin-users.html") {
     const gate = typeof guardBackOffice === "function" ? await guardBackOffice({ superAdmin: true }) : null;

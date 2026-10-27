@@ -28,8 +28,12 @@ async function getAuthSession() {
 async function getAuthProfile(userId) {
   const sb = authClient();
   if (!sb || !userId) return null;
-  const { data, error } = await sb.from("profiles").select("id,email,role,created_at").eq("id", userId).maybeSingle();
-  if (error) throw error;
+  const { data, error } = await sb.from("profiles").select("id,email,full_name,role,created_at,reviewed_at").eq("id", userId).maybeSingle();
+  if (error) {
+    const fallback = await sb.from("profiles").select("id,email,role,created_at").eq("id", userId).maybeSingle();
+    if (fallback.error) throw fallback.error;
+    return fallback.data;
+  }
   return data;
 }
 
@@ -69,6 +73,13 @@ function showAuthStatus(message, kind) {
 function mountAdminAccount(profile) {
   const nav = document.querySelector(".admin-side-nav");
   if (!nav || !profile) return;
+  if (canEditContent(profile) && !nav.querySelector("[href='admin-alumni.html'], [href^='admin-alumni.html']")) {
+    const alumni = document.createElement("a");
+    alumni.href = typeof withLang === "function" ? withLang("admin-alumni.html") : "admin-alumni.html";
+    alumni.textContent = typeof t === "function" ? t("alumni.module") : "Alumni";
+    if (document.body.dataset.page === "admin-alumni.html") alumni.classList.add("is-active");
+    nav.insertBefore(alumni, nav.firstChild);
+  }
   if (canApproveAdmins(profile) && !nav.querySelector("[data-admin-users]")) {
     const users = document.createElement("a");
     users.href = typeof withLang === "function" ? withLang("admin-users.html") : "admin-users.html";
@@ -115,7 +126,7 @@ async function guardBackOffice(options) {
     return null;
   }
   if (options?.superAdmin && !canApproveAdmins(profile)) {
-    authNext("admin-news.html");
+    authNext("admin-alumni.html");
     return null;
   }
   if (options?.content && !canEditContent(profile)) {
@@ -143,7 +154,10 @@ function bindAuthPages() {
       const { error } = await sb.auth.signUp({
         email: data.email.trim(),
         password: data.password,
-        options: { emailRedirectTo: authRedirectTo("auth-callback.html") }
+        options: {
+          emailRedirectTo: authRedirectTo("auth-callback.html"),
+          data: { full_name: (data.full_name || "").trim() }
+        }
       });
       if (error) {
         showAuthStatus(error.message, "warn");
@@ -179,7 +193,7 @@ function bindAuthPages() {
         showAuthStatus(t("auth.profileError"), "warn");
         return;
       }
-      if (canEditContent(profile)) authNext("admin-news.html");
+      if (canEditContent(profile)) authNext("admin-alumni.html");
       else authNext("admin-waiting.html");
     });
   }
@@ -260,7 +274,7 @@ function bindAuthPages() {
         const lead = document.getElementById("waiting-lead");
         if (lead) {
           if (profile?.role === "rejected") lead.textContent = t("auth.rejected");
-          else if (canEditContent(profile)) authNext("admin-news.html");
+          else if (canEditContent(profile)) authNext("admin-alumni.html");
           else lead.textContent = t("auth.pending");
         }
         const meta = document.getElementById("admin-account-meta");
@@ -276,6 +290,7 @@ function bindAuthPages() {
 
 async function bindAdminUsers() {
   const table = document.querySelector("#admin-users-table tbody");
+  const pendingBox = document.getElementById("pending-admin-list");
   const status = document.getElementById("auth-status");
   const sb = authClient();
   if (!table || !sb) return;
@@ -287,40 +302,80 @@ async function bindAdminUsers() {
     if (kind === "warn") status.classList.add("is-warn");
   };
 
+  const pill = (role) => {
+    const kind = role === "admin" || role === "super_admin" ? "published" : role === "rejected" ? "warn" : "draft";
+    return `<span class="admin-pill admin-pill-${kind}">${escapeHtml(t("auth.role." + role))}</span>`;
+  };
+
+  const actions = (row) => {
+    if (row.role === "super_admin") return "—";
+    return `
+      <button class="btn btn-gold" type="button" data-approve="${row.id}" ${row.role === "admin" ? "disabled" : ""}>${t("auth.approve")}</button>
+      <button class="btn btn-outline" type="button" data-reject="${row.id}" ${row.role === "rejected" ? "disabled" : ""}>${t("auth.reject")}</button>`;
+  };
+
+  const setStat = (id, value) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = String(value);
+  };
+
   const render = async () => {
-    const { data, error } = await sb.from("profiles").select("id,email,role,created_at").order("created_at", { ascending: true });
-    if (error) {
-      show(error.message, "warn");
+    let query = await sb.from("profiles").select("id,email,full_name,role,created_at,reviewed_at").order("created_at", { ascending: true });
+    if (query.error) {
+      query = await sb.from("profiles").select("id,email,role,created_at").order("created_at", { ascending: true });
+    }
+    if (query.error) {
+      show(query.error.message, "warn");
       return;
     }
-    table.innerHTML = (data || []).map((row) => `
+    const data = query.data || [];
+    const pending = data.filter((row) => row.role === "pending");
+    setStat("admin-user-stat-pending", pending.length);
+    setStat("admin-user-stat-admin", data.filter((row) => row.role === "admin" || row.role === "super_admin").length);
+    setStat("admin-user-stat-rejected", data.filter((row) => row.role === "rejected").length);
+    if (pendingBox) {
+      pendingBox.innerHTML = pending.length
+        ? pending.map((row) => `
+          <article class="pending-admin-card" data-id="${row.id}">
+            <h3>${escapeHtml(row.full_name || row.email)}</h3>
+            <p>${escapeHtml(row.email)}</p>
+            <p class="muted">${t("auth.registered")}: ${escapeHtml((row.created_at || "").slice(0, 10))} · ${t("auth.status")}: ${pill(row.role)}</p>
+            <p class="admin-actions">${actions(row)}</p>
+          </article>`).join("")
+        : `<p class="muted">${t("auth.noPending")}</p>`;
+    }
+    table.innerHTML = data.map((row) => `
       <tr data-id="${row.id}">
+        <td>${escapeHtml(row.full_name || "—")}</td>
         <td>${escapeHtml(row.email)}</td>
-        <td><span class="admin-pill admin-pill-${row.role === "admin" || row.role === "super_admin" ? "published" : row.role === "rejected" ? "warn" : "draft"}">${escapeHtml(t("auth.role." + row.role))}</span></td>
+        <td>${pill(row.role)}</td>
         <td>${escapeHtml((row.created_at || "").slice(0, 10))}</td>
-        <td class="admin-actions">
-          ${row.role === "super_admin" ? "—" : `
-            <button class="btn btn-outline" type="button" data-approve="${row.id}" ${row.role === "admin" ? "disabled" : ""}>${t("auth.approve")}</button>
-            <button class="btn btn-outline" type="button" data-reject="${row.id}" ${row.role === "rejected" ? "disabled" : ""}>${t("auth.reject")}</button>
-          `}
-        </td>
+        <td>${escapeHtml((row.reviewed_at || "").slice(0, 10) || "—")}</td>
+        <td class="admin-actions">${actions(row)}</td>
       </tr>`).join("");
   };
 
-  table.addEventListener("click", async (event) => {
+  const onAction = async (event) => {
     const approve = event.target.closest("[data-approve]")?.getAttribute("data-approve");
     const reject = event.target.closest("[data-reject]")?.getAttribute("data-reject");
     const id = approve || reject;
     if (!id) return;
+    const session = await getAuthSession();
     const role = approve ? "admin" : "rejected";
-    const { error } = await sb.from("profiles").update({ role, updated_at: new Date().toISOString() }).eq("id", id);
-    if (error) {
-      show(error.message, "warn");
+    const payload = { role, updated_at: new Date().toISOString(), reviewed_at: new Date().toISOString(), reviewed_by: session?.user?.id || null };
+    let result = await sb.from("profiles").update(payload).eq("id", id);
+    if (result.error) {
+      result = await sb.from("profiles").update({ role, updated_at: payload.updated_at }).eq("id", id);
+    }
+    if (result.error) {
+      show(result.error.message, "warn");
       return;
     }
     await render();
     show(approve ? t("auth.approved") : t("auth.rejectedOk"));
-  });
+  };
 
+  table.addEventListener("click", onAction);
+  pendingBox?.addEventListener("click", onAction);
   await render();
 }

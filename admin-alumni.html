@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Alumni | Fu Jen imMBA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/styles.css?v=ux34">
+</head>
+<body data-page="admin-alumni.html">
+  <main id="main" class="admin-page">
+    <div class="admin-shell" id="admin-shell">
+      <aside class="admin-sidebar">
+        <p class="admin-kicker" data-i18n="admin.eyebrow">Back office</p>
+        <h1 data-i18n="alumni.h1">Alumni</h1>
+        <p class="admin-side-lead" data-i18n="alumni.workspace">Approved administrators can add, edit, delete, and import alumni records. Every change is written to the audit trail.</p>
+        <p id="admin-account-meta" class="admin-side-lead"></p>
+        <nav class="admin-side-nav" aria-label="Admin">
+          <a class="is-active" href="admin-alumni.html" data-i18n="alumni.module">Alumni</a>
+          <a href="admin-news.html" data-i18n="admin.module">Announcements</a>
+          <a href="admin-faculty.html" data-i18n="adminFac.module">Faculty</a>
+          <a href="index.html" data-i18n="admin.publicHome">Public homepage</a>
+        </nav>
+      </aside>
+      <div class="admin-content">
+        <header class="admin-toolbar">
+          <div>
+            <p class="admin-kicker" data-i18n="alumni.manage">Manage</p>
+            <h2 data-i18n="alumni.list">Alumni records</h2>
+          </div>
+          <p class="cta-row admin-toolbar-actions">
+            <button class="btn btn-gold" type="button" id="alumni-new" data-i18n="alumni.create">Add alumni</button>
+            <label class="btn btn-outline alumni-import-btn">
+              <span data-i18n="alumni.import">Import CSV</span>
+              <input id="alumni-import" type="file" accept=".csv,text/csv" hidden>
+            </label>
+            <button class="btn btn-outline" type="button" id="alumni-export" data-i18n="alumni.export">Export CSV (filtered)</button>
+            <a class="btn btn-navy" href="assets/data/alumni-template.csv" download data-i18n="alumni.template">Download CSV template</a>
+          </p>
+        </header>
+
+        <p class="muted admin-lead" data-i18n="alumni.lead">Search and filter the database, choose which fields to show, then add or import records. Three or more admins can work at the same time; the audit trail records who changed what and when.</p>
+
+        <div class="admin-stats" aria-label="Alumni counts">
+          <article class="admin-stat">
+            <span data-i18n="admin.statTotal">Total records</span>
+            <strong id="alumni-stat-total">0</strong>
+          </article>
+          <article class="admin-stat">
+            <span data-i18n="alumni.shown">Shown after filters</span>
+            <strong id="alumni-stat-shown">0</strong>
+          </article>
+        </div>
+
+        <p id="alumni-status" class="admin-status hidden" role="status"></p>
+
+        <section id="alumni-import-panel" class="panel hidden">
+          <h3 data-i18n="alumni.validateTitle">Validate before importing</h3>
+          <p class="muted" data-i18n="alumni.validateHelp">CSV file → Validate → Import → Supabase → Verify. Required fields, empty rows, degree values, column names, duplicates, and encoding are checked first.</p>
+          <p id="alumni-import-summary" class="admin-sync"></p>
+          <ul id="alumni-import-issues" class="alumni-import-issues"></ul>
+          <p class="cta-row">
+            <button class="btn btn-navy" type="button" id="alumni-import-confirm" data-i18n="alumni.importConfirm">Import valid rows to Supabase</button>
+            <button class="btn btn-outline" type="button" id="alumni-import-cancel" data-i18n="admin.cancel">Cancel</button>
+          </p>
+        </section>
+
+        <form id="alumni-form" class="panel admin-editor hidden">
+          <input type="hidden" name="id">
+          <h3 id="alumni-form-title" data-i18n="alumni.create">Add alumni</h3>
+          <div class="grid-2">
+            <label><span data-i18n="alumni.field.full_name">Name</span> <input name="full_name" required></label>
+            <label><span data-i18n="alumni.field.student_id">Student ID</span> <input name="student_id" required></label>
+            <label><span data-i18n="alumni.field.department">Department</span>
+              <select name="department" required>
+                <option value="International Business and Trade">International Business and Trade</option>
+                <option value="Business Administration">Business Administration</option>
+                <option value="Accounting">Accounting</option>
+                <option value="Finance">Finance</option>
+                <option value="Information Management">Information Management</option>
+                <option value="Economics">Economics</option>
+                <option value="Law">Law</option>
+                <option value="Statistics">Statistics</option>
+              </select>
+            </label>
+            <label><span data-i18n="alumni.field.degree_program">Degree Program</span>
+              <select name="degree_program" required>
+                <option value="Bachelor's Program">Bachelor's Program</option>
+                <option value="Master's Program" selected>Master's Program</option>
+                <option value="Doctoral Program">Doctoral Program</option>
+              </select>
+              <span class="muted" data-i18n="alumni.degreeHelp">Degree Program is a dropdown: Bachelor's Program, Master's Program, or Doctoral Program.</span>
+            </label>
+            <label><span data-i18n="alumni.field.admission_year">Admission Year</span> <input name="admission_year" type="number" min="90" max="150" placeholder="114"></label>
+            <label><span data-i18n="alumni.field.graduation_year">Graduation Year</span> <input name="graduation_year" type="number" min="90" max="150" placeholder="116"></label>
+            <label><span data-i18n="alumni.field.email">Email</span> <input name="email" type="email"></label>
+            <label><span data-i18n="alumni.field.phone">Phone</span> <input name="phone"></label>
+            <label><span data-i18n="alumni.field.company">Current Company</span> <input name="company"></label>
+            <label><span data-i18n="alumni.field.job_title">Job Title</span> <input name="job_title"></label>
+          </div>
+          <p class="cta-row">
+            <button class="btn btn-navy" type="submit" data-i18n="alumni.save">Save record</button>
+            <button class="btn btn-outline" type="button" id="alumni-cancel" data-i18n="admin.cancel">Cancel</button>
+          </p>
+        </form>
+
+        <section class="panel alumni-tools">
+          <h3 data-i18n="alumni.use">Search & Filter</h3>
+          <p class="muted" data-i18n="alumni.filterHelp">Turn stored data into usable information. Filter by name, degree program, graduation year, department, and company, then export the filtered dataset.</p>
+          <div class="grid-2 alumni-filters">
+            <label><span data-i18n="alumni.field.full_name">Name</span> <input id="alumni-filter-name" type="search"></label>
+            <label><span data-i18n="alumni.field.degree_program">Degree program</span> <select id="alumni-filter-degree"></select></label>
+            <label><span data-i18n="alumni.field.graduation_year">Graduation year</span> <select id="alumni-filter-year"></select></label>
+            <label><span data-i18n="alumni.field.department">Department</span> <select id="alumni-filter-department"></select></label>
+            <label><span data-i18n="alumni.field.company">Company</span> <select id="alumni-filter-company"></select></label>
+          </div>
+          <div class="alumni-table-tools">
+            <div class="alumni-col-menu">
+              <button class="btn btn-outline" type="button" id="alumni-columns-btn" data-i18n="alumni.columns">Columns ▾</button>
+              <div id="alumni-columns" class="alumni-col-panel" role="group" aria-label="Display fields"></div>
+            </div>
+          </div>
+        </section>
+
+        <div class="panel admin-table-wrap">
+          <div class="table-scroll">
+            <table class="admin-table" id="alumni-table">
+              <thead><tr></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+
+        <section class="panel alumni-audit">
+          <h3 data-i18n="alumni.track">Audit trail</h3>
+          <p class="muted" data-i18n="alumni.trackHelp">Who → Did What → To Which Record → When. Business data is the current state; the audit trail shows how we got there.</p>
+          <label><span data-i18n="alumni.searchAudit">Search the trail</span> <input id="alumni-audit-search" type="search"></label>
+          <div class="table-scroll">
+            <table class="admin-table" id="alumni-audit-table">
+              <thead>
+                <tr>
+                  <th data-i18n="alumni.time">Time</th>
+                  <th data-i18n="alumni.admin">Admin</th>
+                  <th data-i18n="alumni.whatAction">Action</th>
+                  <th data-i18n="alumni.record">Record</th>
+                  <th data-i18n="alumni.change">Change</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+    </div>
+  </main>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/js/data.js?v=ux34"></script>
+  <script src="assets/js/supabase.js?v=ux34"></script>
+  <script src="assets/js/auth.js?v=ux34"></script>
+  <script src="assets/js/alumni.js?v=ux34"></script>
+  <script src="assets/js/i18n.js?v=ux34"></script>
+  <script src="assets/js/site.js?v=ux34"></script>
+</body>
+</html>
