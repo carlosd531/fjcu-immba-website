@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Student market | Fu Jen imMBA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/styles.css?v=ux38">
+</head>
+<body data-page="admin-market.html">
+  <main id="main" class="admin-page">
+    <div class="admin-shell" id="admin-shell">
+      <aside class="admin-sidebar">
+        <p class="admin-kicker" data-i18n="admin.eyebrow">Back office</p>
+        <h1 data-i18n="market.module">Student market</h1>
+        <p class="admin-side-lead" data-i18n="market.officeLead">Approve buyers and sellers, then monitor orders. This is managed here with the other back office modules. Administrators do not buy or sell.</p>
+        <p id="admin-account-meta" class="admin-side-lead"></p>
+        <nav class="admin-side-nav" aria-label="Admin">
+          <a href="admin-alumni.html" data-i18n="alumni.module">Alumni</a>
+          <a href="admin-news.html" data-i18n="admin.module">Announcements</a>
+          <a href="admin-faculty.html" data-i18n="adminFac.module">Faculty</a>
+          <a class="is-active" href="admin-market.html" data-i18n="market.module">Student market</a>
+          <a href="index.html" data-i18n="admin.publicHome">Public homepage</a>
+        </nav>
+      </aside>
+      <div class="admin-content" id="market-office">
+        <header class="admin-toolbar">
+          <div>
+            <p class="admin-kicker" data-i18n="alumni.manage">Manage</p>
+            <h2 data-i18n="market.module">Student market</h2>
+          </div>
+          <p class="cta-row admin-toolbar-actions">
+            <a class="btn btn-gold" href="/market" data-i18n="market.open">Open the student market</a>
+          </p>
+        </header>
+        <p class="muted admin-lead" data-i18n="market.officeLead">Approve buyers and sellers, then monitor orders. This is managed here with the other back office modules. Administrators do not buy or sell.</p>
+
+        <div class="admin-stats" aria-label="Student market counts">
+          <article class="admin-stat">
+            <span data-i18n="market.pendingBuyers">Pending buyers</span>
+            <strong id="market-stat-buyers">0</strong>
+          </article>
+          <article class="admin-stat">
+            <span data-i18n="market.pendingSellers">Pending sellers</span>
+            <strong id="market-stat-sellers">0</strong>
+          </article>
+          <article class="admin-stat">
+            <span data-i18n="market.openOrders">Open orders</span>
+            <strong id="market-stat-orders">0</strong>
+          </article>
+          <article class="admin-stat">
+            <span data-i18n="market.users">Market users</span>
+            <strong id="market-stat-users">0</strong>
+          </article>
+        </div>
+
+        <p id="market-status" class="admin-status hidden" role="status"></p>
+
+        <section class="panel">
+          <h2 data-i18n="market.pendingBuyers">Pending buyers</h2>
+          <div id="market-buyers" class="pending-admin-list"></div>
+        </section>
+
+        <section class="panel">
+          <h2 data-i18n="market.pendingSellers">Pending sellers</h2>
+          <div id="market-sellers" class="pending-admin-list"></div>
+        </section>
+
+        <section class="panel admin-table-wrap">
+          <h2 data-i18n="market.users">Market users</h2>
+          <div class="table-scroll">
+            <table class="admin-table" id="market-users-table">
+              <thead>
+                <tr>
+                  <th data-i18n="auth.fullName">Name</th>
+                  <th data-i18n="auth.email">Email</th>
+                  <th data-i18n="auth.roleLabel">Role</th>
+                  <th data-i18n="auth.status">Status</th>
+                  <th data-i18n="auth.registered">Registered</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="panel admin-table-wrap">
+          <h2 data-i18n="market.orders">Orders</h2>
+          <div class="table-scroll">
+            <table class="admin-table" id="market-orders-table">
+              <thead>
+                <tr>
+                  <th data-i18n="auth.status">Status</th>
+                  <th data-i18n="market.buyer">Buyer</th>
+                  <th data-i18n="market.seller">Seller</th>
+                  <th data-i18n="market.items">Items</th>
+                  <th data-i18n="market.total">Total</th>
+                  <th data-i18n="alumni.time">Time</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="panel admin-table-wrap">
+          <h2 data-i18n="market.activity">Activity</h2>
+          <div class="table-scroll">
+            <table class="admin-table" id="market-activity-table">
+              <thead>
+                <tr>
+                  <th data-i18n="alumni.time">Time</th>
+                  <th data-i18n="alumni.whatAction">Action</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+    </div>
+  </main>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/js/data.js?v=ux38"></script>
+  <script src="assets/js/supabase.js?v=ux38"></script>
+  <script src="assets/js/auth.js?v=ux38"></script>
+  <script src="assets/js/market-office.js?v=ux38"></script>
+  <script src="assets/js/i18n.js?v=ux38"></script>
+  <script src="assets/js/site.js?v=ux38"></script>
+</body>
+</html>

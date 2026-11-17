@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 import { Cormorant_Garamond, Source_Sans_3 } from "next/font/google"
-import { SiteFooter, SiteHeader } from "@/components/site-chrome"
+import { MarketFrame } from "@/components/market-frame"
 import { I18nProvider } from "@/components/i18n-provider"
 import { getProfile } from "@/lib/auth"
 import { getLang } from "@/lib/lang"
@@ -28,9 +28,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       </head>
       <body className="min-h-full bg-[#f6f3ed] text-[#1c2434] antialiased">
         <I18nProvider lang={lang}>
-          <SiteHeader profile={profile} />
-          <main className="mx-auto w-[min(1120px,calc(100%-40px))] py-8">{children}</main>
-          <SiteFooter />
+          <MarketFrame profile={profile}>{children}</MarketFrame>
         </I18nProvider>
       </body>
     </html>

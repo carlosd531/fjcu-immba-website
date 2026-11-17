@@ -381,6 +381,7 @@ function isAdminPage(page) {
     "admin-faculty.html",
     "admin-alumni.html",
     "admin-users.html",
+    "admin-market.html",
     "admin-waiting.html",
     "login.html",
     "register.html",
@@ -809,6 +810,7 @@ function bindNav() {
         setOpen(!item.classList.contains("open"));
       }
     });
+
     parent.addEventListener("keydown", (event) => {
       if (event.key === "Enter" || event.key === " " || event.key === "ArrowDown") {
         event.preventDefault();
@@ -1533,6 +1535,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (page === "admin-news.html") bindAdminNews();
     if (page === "admin-faculty.html") bindAdminFaculty();
     if (page === "admin-alumni.html" && typeof bindAdminAlumni === "function") await bindAdminAlumni();
+  }
+  if (page === "admin-market.html") {
+    const gate = typeof guardBackOffice === "function" ? await guardBackOffice({ content: true }) : null;
+    if (!gate) return;
+    if (typeof bindMarketOffice === "function") await bindMarketOffice();
   }
   if (page === "admin-users.html") {
     const gate = typeof guardBackOffice === "function" ? await guardBackOffice({ superAdmin: true }) : null;

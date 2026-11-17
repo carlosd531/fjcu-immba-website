@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { useState, type ReactNode } from "react"
+import { useEffect, useState, type ReactNode } from "react"
 import { setLanguage, signOut } from "@/lib/actions"
 import { officialSiteHref, programPage, programSiteHref } from "@/lib/program-site-url"
 import type { Profile } from "@/lib/types"
@@ -15,6 +15,9 @@ export function SiteHeader({ profile }: { profile: Profile | null }) {
   const { t, lang } = useI18n()
   const path = usePathname()
   const [open, setOpen] = useState(false)
+  useEffect(() => {
+    setOpen(false)
+  }, [path])
   const role = profile?.role
   const plainAccount = path === "/market/login" || path === "/market/signup"
   if (plainAccount) {
@@ -104,8 +107,8 @@ export function SiteHeader({ profile }: { profile: Profile | null }) {
                 中文
               </button>
             </form>
-            <button type="button" className="rounded-[10px] border border-[#f6e7d4]/40 px-3 py-1 font-bold md:hidden" aria-expanded={open} onClick={() => setOpen((value) => !value)}>
-              {t("menu")}
+            <button type="button" className="rounded-[10px] border border-[#f6e7d4]/40 px-3 py-1 font-bold" aria-expanded={open} onClick={() => setOpen((value) => !value)}>
+              {open ? t("hideMenu") : t("menu")}
             </button>
           </div>
         </div>
@@ -129,7 +132,13 @@ export function SiteHeader({ profile }: { profile: Profile | null }) {
         </div>
       </header>
 
-      <nav className={`${open ? "block" : "hidden"} border-b border-[#e4e0d8] bg-[#fffcf8] md:block`} aria-label={t("brandSub")}>
+      <nav
+        className={`${open ? "block" : "hidden"} border-b border-[#e4e0d8] bg-[#fffcf8]`}
+        aria-label={t("brandSub")}
+        onClick={(event) => {
+          if ((event.target as HTMLElement).closest("a")) setOpen(false)
+        }}
+      >
         <div className="mx-auto flex w-[min(1120px,calc(100%-40px))] flex-wrap items-center gap-x-4 gap-y-1 py-2 text-sm font-bold text-[#0e1c33]">
           <MenuGroup label={t("navAbout")} href={page("about.html")}>
             {about.map(([file, key]) => (

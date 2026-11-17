@@ -88,12 +88,14 @@ function mountAdminAccount(profile) {
     if (document.body.dataset.page === "admin-users.html") users.classList.add("is-active");
     nav.appendChild(users);
   }
-  if (!nav.querySelector("[data-market-link]") && typeof marketUrl === "function") {
+  if (!nav.querySelector("[href='admin-market.html'], [href^='admin-market.html']")) {
     const market = document.createElement("a");
-    market.href = marketUrl();
+    market.href = typeof withLang === "function" ? withLang("admin-market.html") : "admin-market.html";
     market.dataset.marketLink = "1";
-    market.textContent = typeof t === "function" ? t("nav.market") : "Student market";
-    nav.appendChild(market);
+    market.textContent = typeof t === "function" ? t("market.module") : "Student market";
+    if (document.body.dataset.page === "admin-market.html") market.classList.add("is-active");
+    const home = nav.querySelector("[href='index.html'], [href^='index.html']");
+    nav.insertBefore(market, home);
   }
   if (!document.getElementById("admin-sign-out")) {
     const btn = document.createElement("button");
@@ -200,7 +202,7 @@ function bindAuthPages() {
         showAuthStatus(t("auth.profileError"), "warn");
         return;
       }
-      if (canEditContent(profile)) authNext("admin-alumni.html");
+      if (canEditContent(profile)) authNext("admin-market.html");
       else authNext("admin-waiting.html");
     });
   }
