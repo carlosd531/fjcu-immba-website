@@ -1,3 +1,12 @@
+const MARKET_URL = "";
+
+function marketUrl() {
+  if (!MARKET_URL) return "market.html";
+  const url = new URL(MARKET_URL);
+  url.searchParams.set("lang", typeof getLang === "function" && getLang() === "zh" ? "zh" : "en");
+  return url.href;
+}
+
 function navItems() {
   return [
     {
@@ -32,6 +41,7 @@ function navItems() {
     { label: t("nav.highlights"), href: "highlights.html" },
     { label: t("nav.news"), href: "news.html" },
     { label: t("nav.gallery"), href: "gallery.html" },
+    { label: t("nav.market"), href: MARKET_URL ? marketUrl() : "market.html" },
     { label: t("nav.contact"), href: "contact.html" }
   ];
 }
@@ -400,6 +410,7 @@ const PAGE_HEROES = {
   "admin-news.html": { img: 0, title: "admin.h1", crumbs: "admin.crumbs", eyebrow: "admin.eyebrow" },
   "admin-faculty.html": { img: 6, title: "adminFac.h1", crumbs: "admin.crumbs", eyebrow: "admin.eyebrow" },
   "gallery.html": { img: 1, title: "gal.h1", crumbs: "gal.crumbs", eyebrow: "nav.gallery" },
+  "market.html": { img: 3, title: "market.h1", crumbs: "market.crumbs", eyebrow: "nav.market" },
   "contact.html": { img: 2, title: "con.h1", crumbs: "con.crumbs", eyebrow: "con.eyebrow" },
   "resources.html": { img: 3, title: "res.h1", crumbs: "res.crumbs", eyebrow: "footer.downloads" }
 };

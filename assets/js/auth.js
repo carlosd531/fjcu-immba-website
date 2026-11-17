@@ -88,6 +88,13 @@ function mountAdminAccount(profile) {
     if (document.body.dataset.page === "admin-users.html") users.classList.add("is-active");
     nav.appendChild(users);
   }
+  if (!nav.querySelector("[data-market-link]") && typeof marketUrl === "function") {
+    const market = document.createElement("a");
+    market.href = marketUrl();
+    market.dataset.marketLink = "1";
+    market.textContent = typeof t === "function" ? t("nav.market") : "Student market";
+    nav.appendChild(market);
+  }
   if (!document.getElementById("admin-sign-out")) {
     const btn = document.createElement("button");
     btn.id = "admin-sign-out";
