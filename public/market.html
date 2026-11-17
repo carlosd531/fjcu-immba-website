@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Student market | Fu Jen imMBA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/styles.css?v=ux27">
+</head>
+<body data-page="market.html">
+  <main id="main">
+    <section class="section">
+      <div class="wrap">
+        <div class="panel">
+          <p data-i18n="market.lead">The student market is part of this site. Buyers and sellers sign in there with a market account. The administrator approves both.</p>
+          <p class="cta-row"><a class="btn btn-gold" id="open-market" data-i18n="market.open">Open the student market</a></p>
+        </div>
+      </div>
+    </section>
+  </main>
+  <script src="assets/js/data.js?v=ux36"></script>
+  <script src="assets/js/supabase.js?v=ux36"></script>
+  <script src="assets/js/i18n.js?v=ux37"></script>
+  <script src="assets/js/site.js?v=ux37"></script>
+  <script>
+    (function () {
+      var openMarket = document.getElementById("open-market");
+      if (!openMarket) return;
+      if (typeof MARKET_URL === "string" && MARKET_URL) openMarket.href = marketUrl();
+      else {
+        var row = openMarket.parentElement;
+        openMarket.remove();
+        if (row && row.classList.contains("cta-row") && !row.children.length) row.remove();
+      }
+    })();
+  </script>
+</body>
+</html>

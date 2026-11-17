@@ -2,26 +2,19 @@
 
 English-first redesign of the [MBA Program in International Management](https://www.management.fju.edu.tw/esubweb/immbaengindex/) at Fu Jen Catholic University.
 
-Static HTML, CSS, and JavaScript. No build step. Ready to publish on Vercel as a static site.
+One Next.js project. The program pages stay at their current addresses. The student market is the `/market` section, with its own sign-in. An administrator of the market approves buyers and sellers.
 
 ## Local preview
 
 ```bash
-python3 -m http.server 5173 --bind 127.0.0.1
+npm install
+npm run dev
 ```
 
-Then visit http://127.0.0.1:5173
+The dev server listens on port 3847. The program home is `/`. The student market is `/market`.
 
 ## Publish on Vercel
 
-This folder is configured with `vercel.json` (static HTML, `cleanUrls`, security headers). From the project root:
-
-```bash
-npx vercel login
-npx vercel link
-npx vercel --prod
-```
-
-Or import `carlosd531/fjcu-immba-website` in the Vercel dashboard, leave **Framework Preset** as Other, and deploy. Production uses `index.html` as the homepage.
+Import `carlosd531/fjcu-immba-website` and let Vercel detect Next.js. The program pages are the HTML files in `public/`. The market uses the class Supabase project. If `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` are unset, the app uses the public address and publishable key already in the code. Do not add the service-role key.
 
 Content is adapted from the official College of Management pages for a teaching demonstration. Admissions, tuition, and partner rules should always be confirmed on the university systems linked from this site.
