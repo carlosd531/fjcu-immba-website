@@ -38,12 +38,14 @@ export default async function HomePage({
       <h1 className="mt-2 font-display text-5xl text-[#0e1c33]">{t(lang, "heroTitle")}</h1>
       <p className="mt-3 max-w-2xl text-lg text-[#5b6577]">{t(lang, "heroLead")}</p>
       {!profile ? (
-        <section className="mt-6 flex flex-col gap-3 rounded-[18px] border border-[#e4e0d8] bg-[#fffcf8] p-5 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h2 className="font-display text-3xl">{t(lang, "startTitle")}</h2>
-            <p className="mt-1 max-w-2xl text-[#5b6577]">{t(lang, "startLead")}</p>
+        <section className="mt-6 rounded-[18px] border border-[#e4e0d8] bg-[#fffcf8] p-5">
+          <h2 className="font-display text-3xl">{t(lang, "startTitle")}</h2>
+          <p className="mt-1 max-w-2xl text-[#5b6577]">{t(lang, "startLead")}</p>
+          <div className="mt-4 flex flex-wrap gap-3">
+            <Link href="/market/signup?kind=buyer" className="inline-flex h-11 items-center justify-center rounded-full bg-[#b68a3d] px-5 font-bold text-white">{t(lang, "startBuying")}</Link>
+            <Link href="/market/signup?kind=seller" className="inline-flex h-11 items-center justify-center rounded-full bg-[#0e1c33] px-5 font-bold text-white">{t(lang, "beSeller")}</Link>
           </div>
-          <Link href="/market/login" className="inline-flex h-11 shrink-0 items-center justify-center rounded-full bg-[#b68a3d] px-5 font-bold text-white">{t(lang, "signIn")}</Link>
+          <p className="mt-3 text-sm">{t(lang, "haveAccountShort")} <Link href="/market/login" className="font-bold underline">{t(lang, "signIn")}</Link></p>
         </section>
       ) : null}
       <div className="mt-6 grid grid-cols-3 overflow-hidden rounded-[18px] border border-[#e4e0d8] bg-[#fffcf8]">
@@ -58,7 +60,7 @@ export default async function HomePage({
           </div>
         ))}
       </div>
-      <form className="mt-6 flex flex-col gap-3 sm:flex-row" action="/">
+      <form className="mt-6 flex flex-col gap-3 sm:flex-row" action="/market">
         <input
           name="q"
           defaultValue={q}
@@ -71,7 +73,7 @@ export default async function HomePage({
         {categories.map((item) => (
           <Link
             key={item || "all"}
-            href={item ? `/?category=${item}` : "/"}
+            href={item ? `/market?category=${item}` : "/market"}
             className={`rounded-full px-3 py-1 text-sm font-bold ${category === item || (!category && !item) ? "bg-[#0e1c33] text-white" : "bg-[#efe2c8] text-[#6d4e16]"}`}
           >
             {t(lang, (item || "all") as MessageKey)}

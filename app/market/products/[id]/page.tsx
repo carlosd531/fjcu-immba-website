@@ -47,11 +47,17 @@ export default async function ProductPage({
             <p>{profile.requested_role === "seller" ? t(lang, "pendingSeller") : profile.request_status === "rejected" ? t(lang, "rejected") : t(lang, "pendingBuyer")}</p>
           ) : profile?.role === "buyer" ? (
             <p>{t(lang, "outOfStock")}</p>
+          ) : profile ? (
+            <p>{product.stock > 0 ? t(lang, "accountCannotBuy") : t(lang, "outOfStock")}</p>
           ) : (
-            <p>
-              {t(lang, "signInToBuy")}{" "}
-              <Link href="/market/login" className="font-bold text-[#0e1c33] underline">{t(lang, "signIn")}</Link>
-            </p>
+            <div>
+              <p>{t(lang, "signInToBuy")}</p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <Link href="/market/signup?kind=buyer" className="inline-flex h-11 items-center rounded-full bg-[#b68a3d] px-5 font-bold text-white">{t(lang, "startBuying")}</Link>
+                <Link href="/market/signup?kind=seller" className="inline-flex h-11 items-center rounded-full bg-[#0e1c33] px-5 font-bold text-white">{t(lang, "beSeller")}</Link>
+              </div>
+              <p className="mt-3 text-sm">{t(lang, "haveAccountShort")} <Link href="/market/login" className="font-bold underline">{t(lang, "signIn")}</Link></p>
+            </div>
           )}
         </div>
       </div>

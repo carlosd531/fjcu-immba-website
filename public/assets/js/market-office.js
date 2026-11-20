@@ -98,10 +98,10 @@ function renderMarketOffice(data) {
   if (orderBody) {
     orderBody.innerHTML = orders.map((order) => {
       const items = (order.order_items || []).map((item) => item.title_en).join(", ");
-      const total = (order.order_items || []).reduce((sum, item) => sum + item.unit_price * item.quantity, 0);
+      const total = (order.order_items || []).reduce((sum, item) => sum + item.unit_price * item.quantity, 0) + Number(order.service_fee || 0) + Number(order.delivery_fee || 0);
       return `
         <tr>
-          <td>${escapeHtml(order.status)}</td>
+          <td>${escapeHtml(order.status)}${order.fulfillment ? ` · ${escapeHtml(order.fulfillment)}` : ""}</td>
           <td>${escapeHtml(order.buyer || "")}</td>
           <td>${escapeHtml(order.seller || "")}</td>
           <td>${escapeHtml(items)}</td>

@@ -14,10 +14,13 @@ const navy = "inline-flex h-10 items-center justify-center rounded-full bg-[#0e1
 export function SiteHeader({ profile }: { profile: Profile | null }) {
   const { t, lang } = useI18n()
   const path = usePathname()
-  const [open, setOpen] = useState(false)
+  const [collapsed, setCollapsed] = useState(false)
   useEffect(() => {
-    setOpen(false)
-  }, [path])
+    const saved = localStorage.getItem("immbaMenuCollapsed")
+    if (saved === "1") setCollapsed(true)
+    else if (saved === "0") setCollapsed(false)
+    else setCollapsed(window.matchMedia("(max-width: 960px)").matches)
+  }, [])
   const role = profile?.role
   const plainAccount = path === "/market/login" || path === "/market/signup"
   if (plainAccount) {
@@ -107,8 +110,21 @@ export function SiteHeader({ profile }: { profile: Profile | null }) {
                 中文
               </button>
             </form>
-            <button type="button" className="rounded-[10px] border border-[#f6e7d4]/40 px-3 py-1 font-bold" aria-expanded={open} onClick={() => setOpen((value) => !value)}>
-              {open ? t("hideMenu") : t("menu")}
+            <button
+              type="button"
+              className="inline-flex items-center gap-2 rounded-[10px] border border-[#f6e7d4]/40 px-3 py-1 font-bold"
+              aria-expanded={!collapsed}
+              onClick={() => {
+                const next = !collapsed
+                setCollapsed(next)
+                localStorage.setItem("immbaMenuCollapsed", next ? "1" : "0")
+              }}
+            >
+              <span aria-hidden className={`relative block h-0.5 w-[18px] ${collapsed ? "bg-current" : "bg-transparent"}`}>
+                <span className={`absolute left-0 block h-0.5 w-[18px] bg-current ${collapsed ? "-top-1.5" : "top-0 rotate-45"}`} />
+                <span className={`absolute left-0 block h-0.5 w-[18px] bg-current ${collapsed ? "top-1.5" : "top-0 -rotate-45"}`} />
+              </span>
+              {collapsed ? t("menu") : t("hideMenu")}
             </button>
           </div>
         </div>
@@ -132,13 +148,7 @@ export function SiteHeader({ profile }: { profile: Profile | null }) {
         </div>
       </header>
 
-      <nav
-        className={`${open ? "block" : "hidden"} border-b border-[#e4e0d8] bg-[#fffcf8]`}
-        aria-label={t("brandSub")}
-        onClick={(event) => {
-          if ((event.target as HTMLElement).closest("a")) setOpen(false)
-        }}
-      >
+      <nav className={`${collapsed ? "hidden" : "block"} border-b border-[#e4e0d8] bg-[#fffcf8]`} aria-label={t("brandSub")}>
         <div className="mx-auto flex w-[min(1120px,calc(100%-40px))] flex-wrap items-center gap-x-4 gap-y-1 py-2 text-sm font-bold text-[#0e1c33]">
           <MenuGroup label={t("navAbout")} href={page("about.html")}>
             {about.map(([file, key]) => (
@@ -178,7 +188,11 @@ export function SiteHeader({ profile }: { profile: Profile | null }) {
             {profile ? (
               <form action={signOut}><button className={navy}>{t("signOut")}</button></form>
             ) : (
-              <Link className={gold} href="/market/login">{t("signIn")}</Link>
+              <>
+                <Link className={gold} href="/market/signup?kind=buyer">{t("startBuying")}</Link>
+                <Link className={navy} href="/market/signup?kind=seller">{t("beSeller")}</Link>
+                <Link className="inline-flex h-10 items-center text-sm font-bold underline" href="/market/login">{t("signIn")}</Link>
+              </>
             )}
           </span>
         </div>

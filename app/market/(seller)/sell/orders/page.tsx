@@ -1,10 +1,10 @@
+import { DealStatus } from "@/components/deal-status"
 import { advanceOrder } from "@/lib/actions"
 import { getProfile } from "@/lib/auth"
 import { money, pickText, when } from "@/lib/format"
 import { t } from "@/lib/i18n"
 import { getLang } from "@/lib/lang"
 import { loadOrders, orderTotal } from "@/lib/orders"
-import type { MessageKey } from "@/lib/i18n"
 
 export const dynamic = "force-dynamic"
 
@@ -19,8 +19,8 @@ export default async function SellerOrdersPage({ searchParams }: { searchParams:
         <div className="mt-6 space-y-4">
           {orders.map((order) => (
             <article key={order.id} className="rounded-[18px] border border-[#e4e0d8] bg-[#fffcf8] p-4">
+              <DealStatus order={order} role="seller" lang={lang} />
               <div className="flex flex-wrap justify-between gap-2">
-                <b>{t(lang, order.status as MessageKey)}</b>
                 <span className="text-sm text-[#5b6577]">{order.buyer_name} · {when(order.created_at, lang)}</span>
               </div>
               <ul className="mt-2 text-sm">
@@ -31,7 +31,7 @@ export default async function SellerOrdersPage({ searchParams }: { searchParams:
                 <form action={advanceOrder} className="mt-3">
                   <input type="hidden" name="order_id" value={order.id} />
                   <input type="hidden" name="status" value={order.status === "placed" ? "paid" : "shipped"} />
-                  <button className="h-10 rounded-full bg-[#0e1c33] px-4 text-sm font-bold text-white">{t(lang, order.status === "placed" ? "confirmPay" : "ship")}</button>
+                  <button className="h-10 rounded-full bg-[#0e1c33] px-4 text-sm font-bold text-white">{t(lang, order.status === "placed" ? "confirmPay" : order.fulfillment === "pickup" ? "markReady" : "ship")}</button>
                 </form>
               ) : null}
             </article>

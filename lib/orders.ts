@@ -15,6 +15,10 @@ export async function loadOrder(id: string) {
   return data as Order | null
 }
 
-export function orderTotal(order: Order) {
+export function itemsTotal(order: Order) {
   return order.order_items.reduce((sum, item) => sum + item.unit_price * item.quantity, 0)
+}
+
+export function orderTotal(order: Order) {
+  return itemsTotal(order) + (order.service_fee || 0) + (order.delivery_fee || 0)
 }

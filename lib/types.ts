@@ -50,6 +50,9 @@ export type Order = {
   seller_id: string
   status: OrderStatus
   buyer_name: string
+  fulfillment: "pickup" | "delivery"
+  service_fee: number
+  delivery_fee: number
   created_at: string
   paid_at: string | null
   shipped_at: string | null

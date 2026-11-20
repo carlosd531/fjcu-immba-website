@@ -1,3 +1,4 @@
+import { DealStatus } from "@/components/deal-status"
 import { getProfile } from "@/lib/auth"
 import { money, pickText, when } from "@/lib/format"
 import { t, type MessageKey } from "@/lib/i18n"
@@ -30,6 +31,7 @@ export default async function SalesPage() {
         <ul className="mt-6 space-y-3">
           {paid.map((order) => (
             <li key={order.id} className="rounded-[18px] border border-[#e4e0d8] bg-[#fffcf8] p-4">
+              <DealStatus order={order} role="seller" lang={lang} />
               <div className="flex justify-between gap-3">
                 <span>{order.order_items.map((item) => pickText(lang, item.title_en, item.title_zh)).join(", ")}</span>
                 <b>{money(orderTotal(order), lang)}</b>

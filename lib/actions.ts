@@ -107,13 +107,14 @@ export async function removeCart(formData: FormData) {
   revalidatePath("/market/cart")
 }
 
-export async function placeOrder() {
+export async function placeOrder(formData: FormData) {
   const profile = await getProfile()
   if (profile?.role !== "buyer") redirect("/market")
+  const fulfillment = formData.get("fulfillment") === "delivery" ? "delivery" : "pickup"
   const supabase = await createClient()
   const { data: items } = await supabase.from("cart_items").select("product_id, quantity").eq("user_id", profile.id)
   if (!items?.length) redirect("/market/cart")
-  const { error } = await supabase.rpc("place_orders", { payload: items })
+  const { error } = await supabase.rpc("place_orders", { payload: items, fulfillment })
   if (error) redirect(`/market/checkout?error=${fail(error)}`)
   redirect("/market/orders")
 }

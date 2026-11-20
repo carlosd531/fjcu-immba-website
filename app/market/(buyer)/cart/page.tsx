@@ -49,9 +49,12 @@ export default async function CartPage() {
               </div>
             )
           })}
-          <div className="flex items-center justify-between">
-            <b className="font-display text-3xl">{t(lang, "total")} {money(total, lang)}</b>
-            <Link href="/market/checkout" className="inline-flex h-11 items-center rounded-full bg-[#b68a3d] px-5 font-bold text-white">{t(lang, "checkout")}</Link>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <b className="font-display text-3xl">{t(lang, "total")} {money(total, lang)}</b>
+              <p className="text-sm text-[#5b6577]">{t(lang, "feeNote")}</p>
+            </div>
+            <Link href="/market/checkout" className="inline-flex h-11 items-center rounded-full bg-[#b68a3d] px-5 font-bold text-white">{t(lang, "chooseShipping")}</Link>
           </div>
         </div>
       )}
