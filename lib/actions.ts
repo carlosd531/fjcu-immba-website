@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 import { getProfile } from "@/lib/auth"
 import { homeFor } from "@/lib/format"
+import { canBuy, canSell, isMarketAdmin } from "@/lib/roles"
 import { createClient } from "@/lib/supabase/server"
 
 function fail(error: { message: string } | null) {
@@ -13,6 +14,7 @@ function fail(error: { message: string } | null) {
   if (message.includes("photo") || message.includes("too many")) return "errorPhotos"
   if (message.includes("already")) return "errorRequest"
   if (message.includes("invalid") || message.includes("email") || message.includes("password")) return "errorAuth"
+  if (message.includes("own listing")) return "errorOwnListing"
   if (message.includes("buyers only") || message.includes("admins only") || message.includes("cannot") || message.includes("not your")) return "errorForbidden"
   return "errorGeneric"
 }
@@ -64,7 +66,7 @@ export async function signUp(formData: FormData) {
 
 export async function addToCart(formData: FormData) {
   const profile = await getProfile()
-  if (profile?.role !== "buyer") redirect("/market/login")
+  if (!canBuy(profile)) redirect("/market/login")
   const supabase = await createClient()
   const productId = String(formData.get("product_id"))
   const quantity = Math.max(1, Number(formData.get("quantity") || 1))
@@ -87,7 +89,7 @@ export async function addToCart(formData: FormData) {
 
 export async function updateCart(formData: FormData) {
   const profile = await getProfile()
-  if (profile?.role !== "buyer") redirect("/market")
+  if (!canBuy(profile)) redirect("/market")
   const supabase = await createClient()
   const productId = String(formData.get("product_id"))
   const quantity = Number(formData.get("quantity"))
@@ -101,7 +103,7 @@ export async function updateCart(formData: FormData) {
 
 export async function removeCart(formData: FormData) {
   const profile = await getProfile()
-  if (profile?.role !== "buyer") redirect("/market")
+  if (!canBuy(profile)) redirect("/market")
   const supabase = await createClient()
   await supabase.from("cart_items").delete().eq("user_id", profile.id).eq("product_id", String(formData.get("product_id")))
   revalidatePath("/market/cart")
@@ -109,12 +111,13 @@ export async function removeCart(formData: FormData) {
 
 export async function placeOrder(formData: FormData) {
   const profile = await getProfile()
-  if (profile?.role !== "buyer") redirect("/market")
+  if (!canBuy(profile)) redirect("/market")
   const fulfillment = formData.get("fulfillment") === "delivery" ? "delivery" : "pickup"
+  const checkoutKey = String(formData.get("checkout_key") || "") || crypto.randomUUID()
   const supabase = await createClient()
   const { data: items } = await supabase.from("cart_items").select("product_id, quantity").eq("user_id", profile.id)
   if (!items?.length) redirect("/market/cart")
-  const { error } = await supabase.rpc("place_orders", { payload: items, fulfillment })
+  const { error } = await supabase.rpc("place_orders", { payload: items, fulfillment, checkout_key: checkoutKey })
   if (error) redirect(`/market/checkout?error=${fail(error)}`)
   redirect("/market/orders")
 }
@@ -130,14 +133,32 @@ export async function cancelOrder(formData: FormData) {
 
 export async function advanceOrder(formData: FormData) {
   const profile = await getProfile()
-  if (profile?.role !== "seller") redirect("/market")
+  const status = String(formData.get("status"))
+  if (!profile) redirect("/market")
+  if (profile.role !== "seller" && !(canBuy(profile) && status === "completed")) redirect("/market")
   const supabase = await createClient()
   const id = String(formData.get("order_id"))
-  const status = String(formData.get("status"))
-  const { error } = await supabase.from("orders").update({ status }).eq("id", id)
-  if (error) redirect(`/market/sell/orders?error=forbidden`)
+  if (!["paid", "shipped", "completed"].includes(status)) redirect("/market")
+  let query = supabase.from("orders").update({ status }).eq("id", id)
+  if (profile.role === "seller") query = query.eq("seller_id", profile.id)
+  else query = query.eq("buyer_id", profile.id)
+  const { error } = await query
+  if (error) redirect(profile.role === "seller" ? "/market/sell/orders?error=forbidden" : `/market/orders/${id}?error=forbidden`)
   revalidatePath("/market/sell/orders")
   revalidatePath("/market/sell/sales")
+  revalidatePath("/market/orders")
+  revalidatePath(`/market/orders/${id}`)
+}
+
+export async function setHidden(formData: FormData) {
+  const profile = await getProfile()
+  if (!canSell(profile)) redirect("/market")
+  const supabase = await createClient()
+  const id = String(formData.get("id"))
+  const hidden = formData.get("hidden") === "true"
+  await supabase.from("products").update({ hidden }).eq("id", id).eq("seller_id", profile.id)
+  revalidatePath("/market/sell")
+  revalidatePath("/market")
 }
 
 async function uploadPhotos(productId: string, sellerId: string, files: File[]) {
@@ -176,7 +197,7 @@ async function uploadPhotos(productId: string, sellerId: string, files: File[]) 
 
 export async function saveProduct(formData: FormData) {
   const profile = await getProfile()
-  if (profile?.role !== "seller") redirect("/market")
+  if (!canSell(profile)) redirect("/market")
   const supabase = await createClient()
   const payload = {
     title_en: String(formData.get("title_en") || "").trim(),
@@ -187,12 +208,13 @@ export async function saveProduct(formData: FormData) {
     condition: String(formData.get("condition") || "good"),
     price: Math.max(0, Math.round(Number(formData.get("price") || 0))),
     stock: Math.max(0, Math.round(Number(formData.get("stock") || 0))),
+    hidden: formData.get("hidden") === "true",
   }
   if (!payload.title_en || !payload.title_zh) redirect("/market/sell/new?error=generic")
   const existingId = String(formData.get("id") || "")
   let productId = existingId
   if (existingId) {
-    const { error } = await supabase.from("products").update(payload).eq("id", existingId)
+    const { error } = await supabase.from("products").update(payload).eq("id", existingId).eq("seller_id", profile.id)
     if (error) redirect(`/market/sell/${existingId}?error=forbidden`)
   } else {
     const { data, error } = await supabase
@@ -212,17 +234,17 @@ export async function saveProduct(formData: FormData) {
 
 export async function setStock(formData: FormData) {
   const profile = await getProfile()
-  if (profile?.role !== "seller") redirect("/market")
+  if (!canSell(profile)) redirect("/market")
   const supabase = await createClient()
   const id = String(formData.get("id"))
   const stock = Math.max(0, Math.round(Number(formData.get("stock") || 0)))
-  await supabase.from("products").update({ stock }).eq("id", id)
+  await supabase.from("products").update({ stock }).eq("id", id).eq("seller_id", profile.id)
   revalidatePath("/market/sell")
 }
 
 export async function movePhoto(formData: FormData) {
   const profile = await getProfile()
-  if (profile?.role !== "seller") redirect("/market")
+  if (!canSell(profile)) redirect("/market")
   const supabase = await createClient()
   const productId = String(formData.get("product_id"))
   const imageId = String(formData.get("image_id"))
@@ -246,7 +268,7 @@ export async function movePhoto(formData: FormData) {
 
 export async function deletePhoto(formData: FormData) {
   const profile = await getProfile()
-  if (profile?.role !== "seller") redirect("/market")
+  if (!canSell(profile)) redirect("/market")
   const supabase = await createClient()
   const productId = String(formData.get("product_id"))
   const imageId = String(formData.get("image_id"))
@@ -260,7 +282,7 @@ export async function deletePhoto(formData: FormData) {
 
 export async function reviewBuyer(formData: FormData) {
   const profile = await getProfile()
-  if (profile?.role !== "admin") redirect("/market")
+  if (!isMarketAdmin(profile)) redirect("/market")
   const supabase = await createClient()
   const { error } = await supabase.rpc("review_buyer", {
     target: String(formData.get("target")),
@@ -274,7 +296,7 @@ export async function reviewBuyer(formData: FormData) {
 
 export async function reviewSeller(formData: FormData) {
   const profile = await getProfile()
-  if (profile?.role !== "admin") redirect("/market")
+  if (!isMarketAdmin(profile)) redirect("/market")
   const supabase = await createClient()
   const { error } = await supabase.rpc("review_seller", {
     target: String(formData.get("target")),

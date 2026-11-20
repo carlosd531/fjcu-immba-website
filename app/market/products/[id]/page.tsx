@@ -19,7 +19,7 @@ export default async function ProductPage({
 }) {
   const [{ id }, query, lang, profile] = await Promise.all([params, searchParams, getLang(), getProfile()])
   const product = await loadProduct(id)
-  if (!product) notFound()
+  if (!product || (product.hidden && product.seller_id !== profile?.id)) notFound()
   const title = pickText(lang, product.title_en, product.title_zh)
 
   return (
@@ -34,7 +34,7 @@ export default async function ProductPage({
         <p className="text-sm text-[#5b6577]">{product.stock > 0 ? t(lang, "inStock", { n: product.stock }) : t(lang, "outOfStock")}</p>
         <div className="mt-6 rounded-[18px] border border-[#e4e0d8] bg-[#fffcf8] p-4">
           {query.error === "stock" ? <p className="mb-3 text-sm font-semibold text-[#8c3a32]">{t(lang, "errorStock")}</p> : null}
-          {profile?.role === "buyer" && product.stock > 0 ? (
+          {(profile?.role === "buyer" || profile?.role === "seller") && product.stock > 0 && product.seller_id !== profile.id ? (
             <form action={addToCart} className="flex flex-wrap items-end gap-3">
               <input type="hidden" name="product_id" value={product.id} />
               <label className="text-sm font-bold">
@@ -45,7 +45,9 @@ export default async function ProductPage({
             </form>
           ) : profile?.role === "pending" ? (
             <p>{profile.requested_role === "seller" ? t(lang, "pendingSeller") : profile.request_status === "rejected" ? t(lang, "rejected") : t(lang, "pendingBuyer")}</p>
-          ) : profile?.role === "buyer" ? (
+          ) : (profile?.role === "buyer" || profile?.role === "seller") && product.seller_id === profile.id ? (
+            <p>{t(lang, "errorOwnListing")}</p>
+          ) : profile?.role === "buyer" || profile?.role === "seller" ? (
             <p>{t(lang, "outOfStock")}</p>
           ) : profile ? (
             <p>{product.stock > 0 ? t(lang, "accountCannotBuy") : t(lang, "outOfStock")}</p>

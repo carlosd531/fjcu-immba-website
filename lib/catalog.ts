@@ -17,7 +17,7 @@ export function imageUrls(images: ProductImage[] | null | undefined) {
 
 export async function loadProducts(query?: string, category?: string) {
   const supabase = await createClient()
-  let request = supabase.from("products").select("*, product_images(id, storage_path, sort_order)").order("created_at", { ascending: false })
+  let request = supabase.from("products").select("*, product_images(id, storage_path, sort_order)").eq("hidden", false).order("created_at", { ascending: false })
   if (category && ["books", "electronics", "home"].includes(category)) request = request.eq("category", category)
   const { data } = await request
   const products = (data || []) as Product[]

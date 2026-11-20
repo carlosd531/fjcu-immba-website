@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { setStock } from "@/lib/actions"
+import { setHidden, setStock } from "@/lib/actions"
 import { getProfile } from "@/lib/auth"
 import { imageUrls } from "@/lib/catalog"
 import { money, pickText } from "@/lib/format"
@@ -34,13 +34,18 @@ export default async function SellPage() {
                 {photo ? <img src={photo} alt="" className="h-28 w-full rounded-xl object-cover sm:w-36" /> : <div className="h-28 rounded-xl bg-[#efe2c8] sm:w-36" />}
                 <div className="flex-1">
                   <h2 className="font-display text-2xl">{pickText(lang, product.title_en, product.title_zh)}</h2>
-                  <p className="text-sm text-[#5b6577]">{money(product.price, lang)} · {product.stock > 0 ? t(lang, "inStock", { n: product.stock }) : t(lang, "outOfStock")}</p>
+                  <p className="text-sm text-[#5b6577]">{money(product.price, lang)} · {product.stock > 0 ? t(lang, "inStock", { n: product.stock }) : t(lang, "outOfStock")}{product.hidden ? ` · ${t(lang, "hidden")}` : ""}</p>
                   {product.stock <= 1 ? <p className="text-sm font-bold text-[#8c3a32]">{t(lang, "lowStock")}</p> : null}
                   <form action={setStock} className="mt-3 flex items-center gap-2">
                     <input type="hidden" name="id" value={product.id} />
                     <label className="text-sm font-bold">{t(lang, "setStock")}</label>
                     <input name="stock" type="number" min={0} defaultValue={product.stock} className="h-10 w-20 rounded-xl border border-[#e4e0d8] px-2" />
                     <button className="h-10 rounded-full bg-[#0e1c33] px-3 text-sm font-bold text-white">{t(lang, "save")}</button>
+                  </form>
+                  <form action={setHidden} className="mt-2">
+                    <input type="hidden" name="id" value={product.id} />
+                    <input type="hidden" name="hidden" value={product.hidden ? "false" : "true"} />
+                    <button className="h-10 rounded-full border border-[#0e1c33] px-3 text-sm font-bold">{t(lang, product.hidden ? "showListing" : "hideListing")}</button>
                   </form>
                 </div>
                 <Link href={`/market/sell/${product.id}`} className="self-start font-bold underline">{t(lang, "editProduct")}</Link>

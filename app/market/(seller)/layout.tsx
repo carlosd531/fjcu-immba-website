@@ -9,7 +9,7 @@ export default async function SellerLayout({ children }: { children: React.React
   const profile = await getProfile()
   if (profile?.role !== "seller") redirect(homeFor(profile?.role))
   const [lang, orders] = await Promise.all([getLang(), loadOrders("seller_id", profile.id)])
-  const current = orders.find((order) => order.status === "placed" || order.status === "paid") || orders[0] || null
+  const current = orders.find((order) => order.status === "placed" || order.status === "paid" || order.status === "shipped") || orders[0] || null
   return (
     <>
       <DealStatus order={current} role="seller" lang={lang} />

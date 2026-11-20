@@ -2,7 +2,7 @@ import Link from "next/link"
 import { t, type MessageKey } from "@/lib/i18n"
 import type { Lang, Order, OrderStatus } from "@/lib/types"
 
-const rank: Record<OrderStatus, number> = { placed: 0, paid: 1, shipped: 2, cancelled: -1 }
+const rank: Record<OrderStatus, number> = { placed: 0, paid: 1, shipped: 2, completed: 3, cancelled: -1 }
 
 export function DealStatus({
   order,
@@ -25,7 +25,7 @@ export function DealStatus({
       </section>
     )
   }
-  const steps: MessageKey[] = ["placed", "paid", order.fulfillment === "delivery" ? "delivered" : "readyPickup"]
+  const steps: MessageKey[] = ["placed", "paid", order.fulfillment === "delivery" ? "delivered" : "readyPickup", "completed"]
   const current = rank[order.status]
   return (
     <section className="mb-6 rounded-[18px] border border-[#e4e0d8] bg-[#fffcf8] px-4 py-3">
@@ -36,7 +36,7 @@ export function DealStatus({
       {order.status === "cancelled" ? (
         <p className="mt-2 text-sm font-bold text-[#8c3a32]">{t(lang, "cancelled")}</p>
       ) : (
-        <ol className="mt-3 grid grid-cols-3 gap-2">
+        <ol className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
           {steps.map((step, index) => {
             const done = current >= index
             return (

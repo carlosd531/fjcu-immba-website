@@ -5,12 +5,14 @@ import { money, pickText, when } from "@/lib/format"
 import { t } from "@/lib/i18n"
 import { getLang } from "@/lib/lang"
 import { loadOrders, orderTotal } from "@/lib/orders"
+import { redirect } from "next/navigation"
 
 export const dynamic = "force-dynamic"
 
 export default async function OrdersPage() {
   const [lang, profile] = await Promise.all([getLang(), getProfile()])
-  const orders = await loadOrders("buyer_id", profile!.id)
+  if (!profile) redirect("/market/login")
+  const orders = await loadOrders("buyer_id", profile.id)
   return (
     <div>
       <h1 className="font-display text-5xl">{t(lang, "ordersTitle")}</h1>

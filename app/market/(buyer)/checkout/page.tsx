@@ -7,16 +7,18 @@ import { getLang } from "@/lib/lang"
 import { createClient } from "@/lib/supabase/server"
 import { getProfile } from "@/lib/auth"
 import type { MessageKey } from "@/lib/i18n"
+import { redirect } from "next/navigation"
 
 export const dynamic = "force-dynamic"
 
 export default async function CheckoutPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
   const [lang, profile, query] = await Promise.all([getLang(), getProfile(), searchParams])
+  if (!profile) redirect("/market/login")
   const supabase = await createClient()
   const { data } = await supabase
     .from("cart_items")
     .select("quantity, products(title_en, title_zh, price, seller_name, seller_id)")
-    .eq("user_id", profile!.id)
+    .eq("user_id", profile.id)
   const rows = (data || [])
     .map((row) => ({ quantity: row.quantity, product: one(row.products) }))
     .filter((row) => row.product)
@@ -25,7 +27,7 @@ export default async function CheckoutPage({ searchParams }: { searchParams: Pro
   const purchases = Math.max(sellers.size, 1)
   const service = SERVICE_FEE * purchases
   const delivery = DELIVERY_FEE * purchases
-  const errorKey = query.error === "errorStock" || query.error === "errorForbidden" || query.error === "errorGeneric" ? query.error : ""
+  const errorKey = query.error === "errorStock" || query.error === "errorForbidden" || query.error === "errorGeneric" || query.error === "errorOwnListing" ? query.error : ""
 
   return (
     <div className="mx-auto max-w-2xl">
@@ -35,6 +37,7 @@ export default async function CheckoutPage({ searchParams }: { searchParams: Pro
       {errorKey ? <p className="mt-3 font-semibold text-[#8c3a32]">{t(lang, errorKey as MessageKey)}</p> : null}
       {rows.length === 0 ? <p className="mt-6">{t(lang, "emptyCart")}</p> : (
         <form action={placeOrder} className="mt-6 rounded-[18px] border border-[#e4e0d8] bg-[#fffcf8] p-5">
+          <input type="hidden" name="checkout_key" value={crypto.randomUUID()} />
           <ul className="space-y-3">
             {rows.map((row, index) => (
               <li key={index} className="flex justify-between gap-4">

@@ -27,11 +27,11 @@ export default async function SellerOrdersPage({ searchParams }: { searchParams:
                 {order.order_items.map((item) => <li key={item.id}>{pickText(lang, item.title_en, item.title_zh)} × {item.quantity}</li>)}
               </ul>
               <p className="mt-2 font-bold">{money(orderTotal(order), lang)}</p>
-              {order.status === "placed" || order.status === "paid" ? (
+              {order.status === "placed" || order.status === "paid" || order.status === "shipped" ? (
                 <form action={advanceOrder} className="mt-3">
                   <input type="hidden" name="order_id" value={order.id} />
-                  <input type="hidden" name="status" value={order.status === "placed" ? "paid" : "shipped"} />
-                  <button className="h-10 rounded-full bg-[#0e1c33] px-4 text-sm font-bold text-white">{t(lang, order.status === "placed" ? "confirmPay" : order.fulfillment === "pickup" ? "markReady" : "ship")}</button>
+                  <input type="hidden" name="status" value={order.status === "placed" ? "paid" : order.status === "paid" ? "shipped" : "completed"} />
+                  <button className="h-10 rounded-full bg-[#0e1c33] px-4 text-sm font-bold text-white">{t(lang, order.status === "placed" ? "confirmPay" : order.status === "paid" ? (order.fulfillment === "pickup" ? "markReady" : "ship") : "markCompleted")}</button>
                 </form>
               ) : null}
             </article>

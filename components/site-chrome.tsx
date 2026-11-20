@@ -74,6 +74,8 @@ export function SiteHeader({ profile }: { profile: Profile | null }) {
       : role === "seller"
         ? [
             ["/market", t("market")],
+            ["/market/cart", t("cart")],
+            ["/market/orders", t("orders")],
             ["/market/sell", t("myProducts")],
             ["/market/sell/orders", t("incoming")],
             ["/market/sell/sales", t("sales")],

@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation"
 import { DealStatus } from "@/components/deal-status"
-import { cancelOrder } from "@/lib/actions"
+import { advanceOrder, cancelOrder } from "@/lib/actions"
 import { getProfile } from "@/lib/auth"
 import { money, pickText, when } from "@/lib/format"
 import { t } from "@/lib/i18n"
@@ -45,6 +45,13 @@ export default async function OrderDetailPage({
         <form action={cancelOrder} className="mt-4">
           <input type="hidden" name="order_id" value={order.id} />
           <button className="h-11 rounded-full border border-[#8c3a32] px-5 font-bold text-[#8c3a32]">{t(lang, "cancel")}</button>
+        </form>
+      ) : null}
+      {order.status === "shipped" ? (
+        <form action={advanceOrder} className="mt-4">
+          <input type="hidden" name="order_id" value={order.id} />
+          <input type="hidden" name="status" value="completed" />
+          <button className="h-11 rounded-full bg-[#b68a3d] px-5 font-bold text-white">{t(lang, "markCompleted")}</button>
         </form>
       ) : null}
     </div>

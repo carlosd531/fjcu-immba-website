@@ -54,6 +54,10 @@ export function ProductForm({ lang, product, error }: { lang: Lang; product?: Pr
             ))}
           </select>
         </label>
+        <label className="flex items-center gap-2 text-sm font-bold">
+          <input type="checkbox" name="hidden" value="true" defaultChecked={product?.hidden} />
+          {t(lang, "hideListing")}
+        </label>
         <label className="text-sm font-bold">
           {t(lang, "photos")}
           <input name="photos" type="file" accept="image/jpeg,image/png,image/webp" multiple className="mt-1 block w-full text-sm" />

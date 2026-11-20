@@ -7,9 +7,10 @@ import { loadOrders } from "@/lib/orders"
 
 export default async function BuyerLayout({ children }: { children: React.ReactNode }) {
   const profile = await getProfile()
-  if (profile?.role !== "buyer") redirect(homeFor(profile?.role))
+  if (!profile) redirect("/market/login")
+  if (profile.role !== "buyer" && profile.role !== "seller") redirect(homeFor(profile.role))
   const [lang, orders] = await Promise.all([getLang(), loadOrders("buyer_id", profile.id)])
-  const current = orders.find((order) => order.status === "placed" || order.status === "paid") || orders[0] || null
+  const current = orders.find((order) => order.status === "placed" || order.status === "paid" || order.status === "shipped") || orders[0] || null
   return (
     <>
       <DealStatus order={current} role="buyer" lang={lang} />

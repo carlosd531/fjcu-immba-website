@@ -6,16 +6,18 @@ import { t } from "@/lib/i18n"
 import { getLang } from "@/lib/lang"
 import { createClient } from "@/lib/supabase/server"
 import { getProfile } from "@/lib/auth"
+import { redirect } from "next/navigation"
 
 export const dynamic = "force-dynamic"
 
 export default async function CartPage() {
   const [lang, profile] = await Promise.all([getLang(), getProfile()])
+  if (!profile) redirect("/market/login")
   const supabase = await createClient()
   const { data } = await supabase
     .from("cart_items")
     .select("quantity, product_id, products(*, product_images(id, storage_path, sort_order))")
-    .eq("user_id", profile!.id)
+    .eq("user_id", profile.id)
   const rows = (data || []).map((row) => ({ ...row, product: one(row.products) }))
   const total = rows.reduce((sum, row) => sum + row.quantity * (row.product?.price || 0), 0)
 

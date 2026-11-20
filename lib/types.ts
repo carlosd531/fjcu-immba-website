@@ -2,7 +2,7 @@ export type Role = "pending" | "buyer" | "seller" | "admin"
 export type Lang = "en" | "zh"
 export type Category = "books" | "electronics" | "home"
 export type Condition = "new" | "good" | "fair"
-export type OrderStatus = "placed" | "paid" | "shipped" | "cancelled"
+export type OrderStatus = "placed" | "paid" | "shipped" | "completed" | "cancelled"
 
 export type Profile = {
   id: string
@@ -32,6 +32,7 @@ export type Product = {
   condition: Condition
   price: number
   stock: number
+  hidden: boolean
   product_images: ProductImage[]
 }
 
@@ -56,6 +57,7 @@ export type Order = {
   created_at: string
   paid_at: string | null
   shipped_at: string | null
+  completed_at: string | null
   order_items: OrderItem[]
 }
 
