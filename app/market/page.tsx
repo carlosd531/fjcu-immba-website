@@ -1,11 +1,10 @@
 import Link from "next/link"
 import { getProfile } from "@/lib/auth"
+import { CATEGORIES, categoryLabelKey } from "@/lib/categories"
 import { imageUrls, loadProducts } from "@/lib/catalog"
 import { money, pickText } from "@/lib/format"
 import { t } from "@/lib/i18n"
 import { getLang } from "@/lib/lang"
-import { createClient } from "@/lib/supabase/server"
-import type { MessageKey } from "@/lib/i18n"
 
 export const dynamic = "force-dynamic"
 
@@ -15,13 +14,7 @@ export default async function HomePage({
   searchParams: Promise<{ q?: string; category?: string }>
 }) {
   const [{ q, category }, lang, profile] = await Promise.all([searchParams, getLang(), getProfile()])
-  const [products, statsResult] = await Promise.all([loadProducts(q, category), (await createClient()).rpc("market_stats")])
-  const stats = (statsResult.data || { listings: 0, sellers: 0, open_orders: 0 }) as {
-    listings: number
-    sellers: number
-    open_orders: number
-  }
-  const categories: Array<"" | "books" | "electronics" | "home"> = ["", "books", "electronics", "home"]
+  const products = await loadProducts(q, category)
 
   return (
     <div>
@@ -32,6 +25,10 @@ export default async function HomePage({
             : profile.requested_role === "seller"
               ? t(lang, "pendingSeller")
               : t(lang, "pendingBuyer")}
+        </p>
+      ) : profile?.role === "seller" ? (
+        <p className="mb-6 rounded-[18px] bg-[#efe2c8] px-4 py-3 text-sm font-semibold text-[#6d4e16]">
+          {t(lang, "sellerCannotBuy")}
         </p>
       ) : null}
       <p className="text-sm font-bold tracking-wide text-[#b68a3d] uppercase">{t(lang, !profile || profile.role === "pending" ? "visitor" : profile.role)}</p>
@@ -48,18 +45,6 @@ export default async function HomePage({
           <p className="mt-3 text-sm">{t(lang, "haveAccountShort")} <Link href="/market/login" className="font-bold underline">{t(lang, "signIn")}</Link></p>
         </section>
       ) : null}
-      <div className="mt-6 grid grid-cols-3 overflow-hidden rounded-[18px] border border-[#e4e0d8] bg-[#fffcf8]">
-        {[
-          [stats.listings, "listings"],
-          [stats.sellers, "sellers"],
-          [stats.open_orders, "openOrders"],
-        ].map(([value, key]) => (
-          <div key={String(key)} className="px-4 py-4">
-            <b className="block font-display text-3xl">{value as number}</b>
-            <span className="text-sm text-[#5b6577]">{t(lang, key as MessageKey)}</span>
-          </div>
-        ))}
-      </div>
       <form className="mt-6 flex flex-col gap-3 sm:flex-row" action="/market">
         <input
           name="q"
@@ -70,13 +55,13 @@ export default async function HomePage({
         <button className="h-12 rounded-full bg-[#0e1c33] px-5 font-bold text-white">{t(lang, "search")}</button>
       </form>
       <div className="mt-4 flex flex-wrap gap-2">
-        {categories.map((item) => (
+        {(["", ...CATEGORIES] as const).map((item) => (
           <Link
             key={item || "all"}
             href={item ? `/market?category=${item}` : "/market"}
             className={`rounded-full px-3 py-1 text-sm font-bold ${category === item || (!category && !item) ? "bg-[#0e1c33] text-white" : "bg-[#efe2c8] text-[#6d4e16]"}`}
           >
-            {t(lang, (item || "all") as MessageKey)}
+            {t(lang, item ? categoryLabelKey(item) : "all")}
           </Link>
         ))}
       </div>
@@ -88,7 +73,7 @@ export default async function HomePage({
             <Link key={product.id} href={`/market/products/${product.id}`} className="overflow-hidden rounded-[18px] border border-[#e4e0d8] bg-[#fffcf8] shadow-[0_18px_50px_rgba(14,28,51,0.08)]">
               {photo ? <img src={photo} alt="" className="aspect-[4/3] w-full object-cover" /> : <div className="aspect-[4/3] bg-[#efe2c8]" />}
               <div className="p-4">
-                <div className="text-xs font-bold text-[#6d4e16]">{t(lang, product.category)}</div>
+                <div className="text-xs font-bold text-[#6d4e16]">{t(lang, categoryLabelKey(product.category))}</div>
                 <h2 className="mt-1 font-display text-2xl">{pickText(lang, product.title_en, product.title_zh)}</h2>
                 <p className="text-sm text-[#5b6577]">{product.seller_name}</p>
                 <div className="mt-3 flex items-center justify-between">

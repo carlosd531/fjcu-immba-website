@@ -1,6 +1,6 @@
 export type Role = "pending" | "buyer" | "seller" | "admin"
 export type Lang = "en" | "zh"
-export type Category = "books" | "electronics" | "home"
+export type Category = "school" | "home" | "personal_use" | "others"
 export type Condition = "new" | "good" | "fair"
 export type OrderStatus = "placed" | "paid" | "shipped" | "completed" | "cancelled"
 
@@ -51,6 +51,7 @@ export type Order = {
   seller_id: string
   status: OrderStatus
   buyer_name: string
+  seller_name: string
   fulfillment: "pickup" | "delivery"
   service_fee: number
   delivery_fee: number

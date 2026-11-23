@@ -3,6 +3,7 @@ import { notFound } from "next/navigation"
 import { Gallery } from "@/components/gallery"
 import { addToCart } from "@/lib/actions"
 import { getProfile } from "@/lib/auth"
+import { categoryLabelKey } from "@/lib/categories"
 import { imageUrls, loadProduct } from "@/lib/catalog"
 import { money, pickText } from "@/lib/format"
 import { t } from "@/lib/i18n"
@@ -26,7 +27,7 @@ export default async function ProductPage({
     <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
       <Gallery urls={imageUrls(product.product_images)} alt={title} />
       <div>
-        <p className="text-sm font-bold text-[#b68a3d]">{t(lang, product.category)} · {t(lang, product.condition)}</p>
+        <p className="text-sm font-bold text-[#b68a3d]">{t(lang, categoryLabelKey(product.category))} · {t(lang, product.condition)}</p>
         <h1 className="mt-2 font-display text-5xl">{title}</h1>
         <p className="mt-3 text-[#5b6577]">{pickText(lang, product.description_en, product.description_zh)}</p>
         <p className="mt-4 text-sm">{t(lang, "sellerLabel")}: {product.seller_name}</p>
@@ -34,7 +35,8 @@ export default async function ProductPage({
         <p className="text-sm text-[#5b6577]">{product.stock > 0 ? t(lang, "inStock", { n: product.stock }) : t(lang, "outOfStock")}</p>
         <div className="mt-6 rounded-[18px] border border-[#e4e0d8] bg-[#fffcf8] p-4">
           {query.error === "stock" ? <p className="mb-3 text-sm font-semibold text-[#8c3a32]">{t(lang, "errorStock")}</p> : null}
-          {(profile?.role === "buyer" || profile?.role === "seller") && product.stock > 0 && product.seller_id !== profile.id ? (
+          {query.error === "forbidden" ? <p className="mb-3 text-sm font-semibold text-[#8c3a32]">{t(lang, "sellerCannotBuy")}</p> : null}
+          {profile?.role === "buyer" && product.stock > 0 ? (
             <form action={addToCart} className="flex flex-wrap items-end gap-3">
               <input type="hidden" name="product_id" value={product.id} />
               <label className="text-sm font-bold">
@@ -45,9 +47,11 @@ export default async function ProductPage({
             </form>
           ) : profile?.role === "pending" ? (
             <p>{profile.requested_role === "seller" ? t(lang, "pendingSeller") : profile.request_status === "rejected" ? t(lang, "rejected") : t(lang, "pendingBuyer")}</p>
-          ) : (profile?.role === "buyer" || profile?.role === "seller") && product.seller_id === profile.id ? (
+          ) : profile?.role === "seller" && product.seller_id === profile.id ? (
             <p>{t(lang, "errorOwnListing")}</p>
-          ) : profile?.role === "buyer" || profile?.role === "seller" ? (
+          ) : profile?.role === "seller" ? (
+            <p>{t(lang, "sellerCannotBuy")}</p>
+          ) : profile?.role === "buyer" ? (
             <p>{t(lang, "outOfStock")}</p>
           ) : profile ? (
             <p>{product.stock > 0 ? t(lang, "accountCannotBuy") : t(lang, "outOfStock")}</p>

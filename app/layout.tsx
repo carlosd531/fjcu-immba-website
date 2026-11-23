@@ -26,7 +26,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           rel="stylesheet"
         />
       </head>
-      <body className="min-h-full bg-[#f6f3ed] text-[#1c2434] antialiased">
+      <body className="market-shell min-h-full text-[#1c2434] antialiased">
         <I18nProvider lang={lang}>
           <MarketFrame profile={profile}>{children}</MarketFrame>
         </I18nProvider>

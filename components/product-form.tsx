@@ -1,4 +1,5 @@
 import { deletePhoto, movePhoto, saveProduct } from "@/lib/actions"
+import { CATEGORIES, categoryLabelKey } from "@/lib/categories"
 import { imageUrls, sortedImages } from "@/lib/catalog"
 import { t, type MessageKey } from "@/lib/i18n"
 import type { Lang, Product } from "@/lib/types"
@@ -39,9 +40,9 @@ export function ProductForm({ lang, product, error }: { lang: Lang; product?: Pr
           </label>
           <label className="text-sm font-bold">
             {t(lang, "category")}
-            <select name="category" defaultValue={product?.category || "books"} className="mt-1 h-11 w-full rounded-xl border border-[#e4e0d8] px-3">
-              {(["books", "electronics", "home"] as const).map((item) => (
-                <option key={item} value={item}>{t(lang, item)}</option>
+            <select name="category" defaultValue={product?.category || "school"} className="mt-1 h-11 w-full rounded-xl border border-[#e4e0d8] px-3">
+              {CATEGORIES.map((item) => (
+                <option key={item} value={item}>{t(lang, categoryLabelKey(item))}</option>
               ))}
             </select>
           </label>

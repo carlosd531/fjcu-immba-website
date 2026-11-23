@@ -9,6 +9,22 @@ export async function loadOrders(column: "buyer_id" | "seller_id", id: string) {
   return (data || []) as Order[]
 }
 
+export async function loadAllOrders() {
+  const supabase = await createClient()
+  const { data } = await supabase.from("orders").select(select).order("created_at", { ascending: false })
+  return (data || []) as Order[]
+}
+
+export async function loadCompletedOrders() {
+  const supabase = await createClient()
+  const { data } = await supabase
+    .from("orders")
+    .select(select)
+    .eq("status", "completed")
+    .order("completed_at", { ascending: false })
+  return (data || []) as Order[]
+}
+
 export async function loadOrder(id: string) {
   const supabase = await createClient()
   const { data } = await supabase.from("orders").select(select).eq("id", id).maybeSingle()
@@ -16,7 +32,7 @@ export async function loadOrder(id: string) {
 }
 
 export function itemsTotal(order: Order) {
-  return order.order_items.reduce((sum, item) => sum + item.unit_price * item.quantity, 0)
+  return (order.order_items || []).reduce((sum, item) => sum + item.unit_price * item.quantity, 0)
 }
 
 export function orderTotal(order: Order) {

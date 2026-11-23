@@ -33,12 +33,9 @@ function navItems() {
     },
     { label: t("nav.faculty"), href: "faculty.html" },
     { label: t("nav.guide"), href: "guide.html" },
-    { label: t("nav.graduation"), href: "graduation.html" },
     { label: t("nav.dual"), href: "dual-degree.html" },
     { label: t("nav.exchange"), href: "exchange.html" },
-    { label: t("nav.highlights"), href: "highlights.html" },
     { label: t("nav.news"), href: "news.html" },
-    { label: t("nav.gallery"), href: "gallery.html" },
     { label: t("nav.market"), href: marketUrl() },
     { label: t("nav.contact"), href: "contact.html" }
   ];

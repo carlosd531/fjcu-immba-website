@@ -122,13 +122,56 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply text-foreground;
     font-family: var(--font-source), "Noto Sans TC", sans-serif;
+  }
+
+  .market-shell {
+    position: relative;
+    isolation: isolate;
+    background-color: #f3eee5;
+    background-image:
+      radial-gradient(980px 460px at 6% -10%, rgba(182, 138, 61, 0.18), transparent 64%),
+      radial-gradient(820px 500px at 108% 4%, rgba(90, 45, 130, 0.1), transparent 60%),
+      radial-gradient(760px 540px at 94% 112%, rgba(14, 28, 51, 0.08), transparent 62%),
+      linear-gradient(180deg, #f8f4ed 0%, #f2ece2 52%, #ece4d6 100%);
+  }
+
+  .market-shell > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  .market-shell .market-logo-pattern {
+    pointer-events: none;
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    opacity: 0.05;
+    filter: grayscale(0.45) saturate(0.25);
+    mix-blend-mode: multiply;
+    background-image: url("/assets/img/fujen-immba-logo-lockup.jpg");
+    background-repeat: repeat;
+    background-size: 320px auto;
+    background-position: 40px 36px;
   }
   html {
     @apply font-sans;
   }
   .font-display {
     font-family: var(--font-serif), "Noto Sans TC", serif;
+  }
+  button,
+  a.inline-flex {
+    transition: transform 140ms ease, filter 140ms ease, box-shadow 140ms ease;
+  }
+  button:hover,
+  a.inline-flex:hover {
+    transform: translateY(-1px);
+  }
+  button:active,
+  a.inline-flex:active {
+    transform: translateY(1px) scale(0.96);
+    filter: brightness(0.96);
   }
 }
