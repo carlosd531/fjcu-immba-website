@@ -53,8 +53,8 @@ export function adminSalesRows(
   lang: Lang,
 ) {
   const sorted = paidCompleted(orders).sort((a, b) => {
-    const sellerA = people.get(a.seller_id)?.full_name || ""
-    const sellerB = people.get(b.seller_id)?.full_name || ""
+    const sellerA = (a.seller_id && people.get(a.seller_id)?.full_name) || a.seller_name || ""
+    const sellerB = (b.seller_id && people.get(b.seller_id)?.full_name) || b.seller_name || ""
     if (sellerA !== sellerB) return sellerA.localeCompare(sellerB)
     return Date.parse(b.completed_at || b.created_at) - Date.parse(a.completed_at || a.created_at)
   })
@@ -72,10 +72,10 @@ export function adminSalesRows(
 
   for (const order of sorted) {
     const itemTotal = itemsTotal(order)
-    const seller = people.get(order.seller_id)
-    const buyer = people.get(order.buyer_id)
+    const seller = order.seller_id ? people.get(order.seller_id) : undefined
+    const buyer = order.buyer_id ? people.get(order.buyer_id) : undefined
     rows.push([
-      seller?.full_name || "",
+      seller?.full_name || order.seller_name || "",
       seller?.email || "",
       buyer?.full_name || order.buyer_name,
       buyer?.email || "",
@@ -101,7 +101,7 @@ export function adminSalesRows(
 
   const bySeller = new Map<string, { sales: number; items: number; earned: number }>()
   for (const order of sorted) {
-    const name = people.get(order.seller_id)?.full_name || "—"
+    const name = (order.seller_id && people.get(order.seller_id)?.full_name) || order.seller_name || "—"
     const current = bySeller.get(name) || { sales: 0, items: 0, earned: 0 }
     current.sales += 1
     current.items += itemsTotal(order)

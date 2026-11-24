@@ -6,6 +6,7 @@ import { t } from "@/lib/i18n"
 import { getLang } from "@/lib/lang"
 import { createClient } from "@/lib/supabase/server"
 import { requireBuyer } from "@/lib/guard"
+import { STOCK_MAX } from "@/lib/limits"
 
 export const dynamic = "force-dynamic"
 
@@ -39,7 +40,7 @@ export default async function CartPage() {
                   <p className="text-sm text-[#5b6577]">{product.seller_name} · {money(product.price, lang)} · {product.stock > 0 ? t(lang, "inStock", { n: product.stock }) : t(lang, "outOfStock")}</p>
                   <form action={updateCart} className="mt-3 flex items-center gap-2">
                     <input type="hidden" name="product_id" value={row.product_id} />
-                    <input name="quantity" type="number" min={1} max={product.stock} defaultValue={row.quantity} className="h-10 w-20 rounded-xl border border-[#e4e0d8] px-2" />
+                    <input name="quantity" type="number" min={1} max={Math.min(STOCK_MAX, product.stock)} step={1} defaultValue={row.quantity} className="h-10 w-20 rounded-xl border border-[#e4e0d8] px-2" />
                     <button className="h-10 rounded-full border border-[#e4e0d8] px-3 text-sm font-bold">{t(lang, "update")}</button>
                   </form>
                 </div>

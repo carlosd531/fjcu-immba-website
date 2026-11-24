@@ -6,6 +6,7 @@ import { getProfile } from "@/lib/auth"
 import { categoryLabelKey } from "@/lib/categories"
 import { imageUrls, loadProduct } from "@/lib/catalog"
 import { money, pickText } from "@/lib/format"
+import { STOCK_MAX } from "@/lib/limits"
 import { t } from "@/lib/i18n"
 import { getLang } from "@/lib/lang"
 
@@ -41,7 +42,7 @@ export default async function ProductPage({
               <input type="hidden" name="product_id" value={product.id} />
               <label className="text-sm font-bold">
                 {t(lang, "quantity")}
-                <input name="quantity" type="number" min={1} max={product.stock} defaultValue={1} className="mt-1 block h-11 w-24 rounded-xl border border-[#e4e0d8] px-3" />
+                <input name="quantity" type="number" min={1} max={Math.min(STOCK_MAX, product.stock)} step={1} defaultValue={1} className="mt-1 block h-11 w-24 rounded-xl border border-[#e4e0d8] px-3" />
               </label>
               <button className="h-11 rounded-full bg-[#b68a3d] px-5 font-bold text-white">{t(lang, "addToCart")}</button>
             </form>

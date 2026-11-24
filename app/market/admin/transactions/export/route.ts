@@ -15,7 +15,7 @@ export async function GET(request: Request) {
     return NextResponse.redirect(new URL("/market/login", request.url))
   }
   const [lang, orders, supabase] = await Promise.all([getLang(), loadCompletedOrders(), createClient()])
-  const ids = [...new Set(orders.flatMap((order) => [order.buyer_id, order.seller_id]))]
+  const ids = [...new Set(orders.flatMap((order) => [order.buyer_id, order.seller_id]).filter((id): id is string => Boolean(id)))]
   const { data: people } = ids.length ? await supabase.from("profiles").select("id, full_name, email").in("id", ids) : { data: [] }
   const names = new Map((people || []).map((person) => [person.id, person]))
   return csvResponse("completed-sales.csv", adminSalesRows(orders, names, lang))

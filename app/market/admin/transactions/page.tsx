@@ -22,7 +22,7 @@ export default async function AdminTransactionsPage({
     .from("orders")
     .select("*, order_items(id, title_en, title_zh, unit_price, quantity, product_id)")
     .order("created_at", { ascending: false })
-  const ids = [...new Set((data || []).flatMap((order) => [order.buyer_id, order.seller_id]))]
+  const ids = [...new Set((data || []).flatMap((order) => [order.buyer_id, order.seller_id]).filter((id): id is string => Boolean(id)))]
   const { data: people } = ids.length ? await supabase.from("profiles").select("id, full_name").in("id", ids) : { data: [] }
   const names = new Map((people || []).map((person) => [person.id, person.full_name]))
   const needle = (query.q || "").trim().toLowerCase()
@@ -84,7 +84,7 @@ export default async function AdminTransactionsPage({
                 <b>{t(lang, order.status as MessageKey)}</b>
                 <span className="text-sm text-[#5b6577]">{when(order.created_at, lang)}</span>
               </div>
-              <p className="mt-1 text-sm">{names.get(order.buyer_id)} → {names.get(order.seller_id)}</p>
+              <p className="mt-1 text-sm">{order.buyer_name || names.get(order.buyer_id || "")} → {order.seller_name || names.get(order.seller_id || "")}</p>
               <p className="mt-1">{(order.order_items || []).map((item) => pickText(lang, item.title_en, item.title_zh)).join(", ")}</p>
               <p className="mt-1 font-bold">{money(orderTotal(order), lang)}</p>
             </article>

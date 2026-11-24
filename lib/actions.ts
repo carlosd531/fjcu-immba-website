@@ -5,6 +5,7 @@ import { redirect } from "next/navigation"
 import { getProfile } from "@/lib/auth"
 import { isCategory } from "@/lib/categories"
 import { homeFor } from "@/lib/format"
+import { clampPrice, clampStock, stockCap } from "@/lib/limits"
 import { canBuy, canSell, isMarketAdmin } from "@/lib/roles"
 import { createClient } from "@/lib/supabase/server"
 
@@ -82,9 +83,12 @@ export async function addToCart(formData: FormData) {
   if (!profile) redirect("/market/login")
   if (!canBuy(profile)) redirect(`/market/products/${productId}?error=forbidden`)
   const supabase = await createClient()
-  const quantity = Math.max(1, Number(formData.get("quantity") || 1))
   const { data: product } = await supabase.from("products").select("stock").eq("id", productId).single()
-  if (!product || product.stock < quantity) redirect(`/market/products/${productId}?error=stock`)
+  const available = stockCap(product?.stock || 0)
+  const quantity = Math.min(available, Math.max(1, Math.round(Number(formData.get("quantity") || 1))))
+  if (!product || available < 1 || !Number.isFinite(quantity) || quantity < 1 || product.stock < quantity) {
+    redirect(`/market/products/${productId}?error=stock`)
+  }
   const { data: existing } = await supabase
     .from("cart_items")
     .select("quantity")
@@ -92,7 +96,7 @@ export async function addToCart(formData: FormData) {
     .eq("product_id", productId)
     .maybeSingle()
   const next = (existing?.quantity || 0) + quantity
-  if (next > product.stock) redirect(`/market/products/${productId}?error=stock`)
+  if (next > available) redirect(`/market/products/${productId}?error=stock`)
   const { error } = existing
     ? await supabase.from("cart_items").update({ quantity: next }).eq("user_id", profile.id).eq("product_id", productId)
     : await supabase.from("cart_items").insert({ user_id: profile.id, product_id: productId, quantity })
@@ -105,11 +109,17 @@ export async function updateCart(formData: FormData) {
   if (!profile || !canBuy(profile)) redirect("/market")
   const supabase = await createClient()
   const productId = String(formData.get("product_id"))
-  const quantity = Number(formData.get("quantity"))
-  if (quantity < 1) {
+  const { data: product } = await supabase.from("products").select("stock").eq("id", productId).single()
+  const quantity = Math.round(Number(formData.get("quantity")))
+  if (!Number.isFinite(quantity) || quantity < 1) {
     await supabase.from("cart_items").delete().eq("user_id", profile.id).eq("product_id", productId)
   } else {
-    await supabase.from("cart_items").update({ quantity }).eq("user_id", profile.id).eq("product_id", productId)
+    const next = Math.min(stockCap(product?.stock || 0), quantity)
+    if (next < 1) {
+      await supabase.from("cart_items").delete().eq("user_id", profile.id).eq("product_id", productId)
+    } else {
+      await supabase.from("cart_items").update({ quantity: next }).eq("user_id", profile.id).eq("product_id", productId)
+    }
   }
   revalidatePath("/market/cart")
 }
@@ -225,8 +235,8 @@ export async function saveProduct(formData: FormData) {
     description_zh: String(formData.get("description_zh") || "").trim(),
     category: isCategory(String(formData.get("category") || "school")) ? String(formData.get("category")) : "school",
     condition: String(formData.get("condition") || "good"),
-    price: Math.max(0, Math.round(Number(formData.get("price") || 0))),
-    stock: Math.max(0, Math.round(Number(formData.get("stock") || 0))),
+    price: clampPrice(formData.get("price")),
+    stock: clampStock(formData.get("stock")),
     hidden: formData.get("hidden") === "true",
   }
   if (!payload.title_en || !payload.title_zh) redirect("/market/sell/new?error=generic")
@@ -256,7 +266,7 @@ export async function setStock(formData: FormData) {
   if (!profile || !canSell(profile)) redirect("/market")
   const supabase = await createClient()
   const id = String(formData.get("id"))
-  const stock = Math.max(0, Math.round(Number(formData.get("stock") || 0)))
+  const stock = clampStock(formData.get("stock"))
   await supabase.from("products").update({ stock }).eq("id", id).eq("seller_id", profile.id)
   revalidatePath("/market/sell")
   revalidatePath("/market")
@@ -343,6 +353,24 @@ export async function reviewSeller(formData: FormData) {
   revalidatePath("/market/admin/sellers")
   revalidatePath("/market/admin/users")
   revalidatePath("/market/admin/activity")
+}
+
+export async function deleteUser(formData: FormData) {
+  const profile = await getProfile()
+  if (!profile || !isMarketAdmin(profile)) redirect("/market")
+  const target = String(formData.get("target"))
+  const supabase = await createClient()
+  const { data: listings } = await supabase.from("products").select("id, product_images(storage_path)").eq("seller_id", target)
+  const paths = (listings || []).flatMap((listing) => (listing.product_images || []).map((image) => image.storage_path)).filter(Boolean)
+  if (paths.length) await supabase.storage.from("product-images").remove(paths)
+  const { error } = await supabase.rpc("delete_market_user", { target })
+  if (error) redirect("/market/admin/users?error=generic")
+  revalidatePath("/market")
+  revalidatePath("/market/admin/users")
+  revalidatePath("/market/admin/transactions")
+  revalidatePath("/market/admin/activity")
+  revalidatePath("/market/admin/buyers")
+  revalidatePath("/market/admin/sellers")
 }
 
 export async function setLanguage(formData: FormData) {

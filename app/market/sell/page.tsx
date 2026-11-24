@@ -2,6 +2,7 @@ import Link from "next/link"
 import { deleteProduct, setHidden, setStock } from "@/lib/actions"
 import { requireSeller } from "@/lib/guard"
 import { imageUrls } from "@/lib/catalog"
+import { STOCK_MAX } from "@/lib/limits"
 import { money, pickText } from "@/lib/format"
 import { t } from "@/lib/i18n"
 import { getLang } from "@/lib/lang"
@@ -40,7 +41,7 @@ export default async function SellPage() {
                   <form action={setStock} className="mt-3 flex items-center gap-2">
                     <input type="hidden" name="id" value={product.id} />
                     <label className="text-sm font-bold">{t(lang, "setStock")}</label>
-                    <input name="stock" type="number" min={0} defaultValue={product.stock} className="h-10 w-20 rounded-xl border border-[#e4e0d8] px-2" />
+                    <input name="stock" type="number" min={0} max={STOCK_MAX} step={1} defaultValue={product.stock} className="h-10 w-20 rounded-xl border border-[#e4e0d8] px-2" />
                     <button className="h-10 rounded-full bg-[#0e1c33] px-3 text-sm font-bold text-white">{t(lang, "save")}</button>
                   </form>
                   <div className="mt-2 flex flex-wrap gap-2">

@@ -47,8 +47,8 @@ export type OrderItem = {
 
 export type Order = {
   id: string
-  buyer_id: string
-  seller_id: string
+  buyer_id: string | null
+  seller_id: string | null
   status: OrderStatus
   buyer_name: string
   seller_name: string

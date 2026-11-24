@@ -1,5 +1,6 @@
 import { deletePhoto, movePhoto, saveProduct } from "@/lib/actions"
 import { CATEGORIES, categoryLabelKey } from "@/lib/categories"
+import { STOCK_MAX } from "@/lib/limits"
 import { imageUrls, sortedImages } from "@/lib/catalog"
 import { t, type MessageKey } from "@/lib/i18n"
 import type { Lang, Product } from "@/lib/types"
@@ -32,11 +33,12 @@ export function ProductForm({ lang, product, error }: { lang: Lang; product?: Pr
         <div className="grid gap-4 sm:grid-cols-3">
           <label className="text-sm font-bold">
             {t(lang, "price")}
-            <input name="price" type="number" min={0} required defaultValue={product?.price ?? 0} className="mt-1 h-11 w-full rounded-xl border border-[#e4e0d8] px-3" />
+            <input name="price" type="number" min={0} step={1} required defaultValue={product?.price ?? 0} className="mt-1 h-11 w-full rounded-xl border border-[#e4e0d8] px-3" />
           </label>
           <label className="text-sm font-bold">
             {t(lang, "stock")}
-            <input name="stock" type="number" min={0} required defaultValue={product?.stock ?? 1} className="mt-1 h-11 w-full rounded-xl border border-[#e4e0d8] px-3" />
+            <input name="stock" type="number" min={0} max={STOCK_MAX} step={1} required defaultValue={product?.stock ?? 1} className="mt-1 h-11 w-full rounded-xl border border-[#e4e0d8] px-3" />
+            <span className="mt-1 block font-normal text-[#5b6577]">{t(lang, "stockHelp")}</span>
           </label>
           <label className="text-sm font-bold">
             {t(lang, "category")}
